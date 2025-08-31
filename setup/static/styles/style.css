@@ -1,15 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Anta&display=swap');
 
-header {
-    box-sizing: border-box;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    padding-top: 20px;
-    padding-bottom: 25px;
-    min-height: 100px;
-}
-
 .titulo {
     width: 33.33vw;
     height: auto;
@@ -31,18 +21,48 @@ body {
     width: 100%;
     max-width: 1440px;
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
     align-items: center;
-    margin-bottom: 40px;
+    box-sizing: border-box;
+    padding-top: 20px;
+    padding-bottom: 25px;
+    height: 20vh;
+    position: relative;
 }
 
 .header h1 {
-    font-size: arial, regular;
-    font-weight: 700;
+    font-family: "Anta", regular;
+    font-weight: bold;
+    font-size: 15vh;
+    /* Takes up to 50% of header height (20vh) */
+    line-height: 1;
+    /* Prevents extra spacing */
     color: #E6E6FA;
-    /* Um tom de lilás claro */
-    text-shadow: 2px 2px 8px rgba(138, 43, 226, 0.5);
+    -webkit-text-stroke-width: 1.5px;
+    -webkit-text-stroke-color: #B2DAFA;
+    text-shadow:
+        3px 3px 5px rgba(0, 0, 0, 0.5);
+    margin: 0;
 }
+
+.profile-icon-desktop {
+    position: absolute;
+    top: 10px;
+    right: 55px;
+    width: 10vh;
+    height: 10vh;
+    align-self: flex-end;
+    border-radius: 100%;
+    background-color: #4d445f;
+    border: 3px solid #B2DAFA;
+}
+
+.profile-icon-desktop img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+}
+
 
 
 .profile-icon {
@@ -62,7 +82,8 @@ body {
     width: 75%;
     max-width: 1440px;
     gap: 35px;
-    height: 80vh;
+    height: 77vh;
+    padding-bottom: 2vh;
 }
 
 .history-section {
@@ -117,7 +138,8 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 300px;
+    flex-grow: 1;
+    /* Takes up remaining vertical space */
     border: 4px dashed #f3f3f3;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
