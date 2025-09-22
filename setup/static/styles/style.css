@@ -1,5 +1,6 @@
+/* Importando fontes */
 @import url('https://fonts.googleapis.com/css2?family=Anta&display=swap');
-
+/* Estilos do desktop */
 .titulo {
     width: 33.33vw;
     height: auto;
@@ -7,7 +8,7 @@
     min-width: 200px;
 }
 
-body {
+.body-desktop {
     background-color: #6E7EAC;
     color: #ffffff;
     margin: 0;
@@ -136,6 +137,7 @@ body {
     background-color: #A8BAF1;
     border-radius: 20px;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     flex-grow: 1;
@@ -149,6 +151,7 @@ body {
     font-size: 42px;
     color: #1E1E1E;
     font-weight: bold;
+    margin: 0;
 }
 
 .data-input-section {
@@ -157,10 +160,10 @@ body {
     font-size: 36px;
     background-color: #95B8F6;
     border-radius: 20px;
-    padding: 30px;
+    padding: 15px;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 5px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
@@ -237,4 +240,75 @@ body {
     background-color: #FFFFFF;
     color: #000000;
     border-color: #000000;
+}
+
+
+/* Estilos do mobile */
+
+.header-mobile {
+    padding: 5vh;
+    padding-top: 10vh;
+}
+
+.header-mobile h1 {
+    font-family: "Anta", regular;
+    font-weight: bold;
+    font-size: 5.8vh;
+    line-height: 1;
+    color: #E6E6FA;
+    -webkit-text-stroke-width: 1.5px;
+    -webkit-text-stroke-color: #B2DAFA;
+    text-shadow:
+        3px 3px 5px rgba(0, 0, 0, 0.5);
+}
+
+.body-mobile {
+    background-color: #6E7EAC;
+    color: #ffffff;
+    margin: 0;
+    padding: 0px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.main-container-mobile {
+    width: 65%;
+    display: flex;
+    flex-direction: column;
+    gap: 2vh;
+}
+
+.tirar-foto-mobile {
+    background-color: #95B8F6;
+    border-radius: 20px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2vh;
+    aspect-ratio: 1.4 / 1;
+}
+
+.content-section-mobile {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 2vh;
+}
+
+.enviar-foto-mobile,
+.historico-graficos-mobile {
+    background-color: #95B8F6;
+    border-radius: 20px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1vh;
+    width: 30vw;
+    height: auto;
+    aspect-ratio: 1 / 1;
 }

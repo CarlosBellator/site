@@ -1,15 +1,7 @@
+{% extends 'base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="pt-br">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EduVisio IA</title>
-    <link rel="stylesheet" href="{% static 'styles/style.css' %}">
-</head>
-
-<body>
+{% block content %}
+<body class="body-desktop">
     <header class="header">
         <div class="profile-icon-desktop"> <img src="{% static 'images/profile.png' %}" alt="">
         </div>
@@ -32,6 +24,7 @@
         <section class="content-section">
             <div class="upload-box">
                 <p>Envie uma foto</p>
+                <input type="file" id="file-input" accept="image/*">
             </div>
 
             <div class="data-input-section">
@@ -64,5 +57,4 @@
         </section>
     </main>
 </body>
-
-</html>
+{% endblock %}
