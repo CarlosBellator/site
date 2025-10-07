@@ -1,5 +1,6 @@
 /* Importando fontes */
 @import url('https://fonts.googleapis.com/css2?family=Anta&display=swap');
+
 /* Estilos do desktop */
 .titulo {
     width: 33.33vw;
@@ -8,7 +9,7 @@
     min-width: 200px;
 }
 
-.body-desktop {
+.body {
     background-color: #6E7EAC;
     color: #ffffff;
     margin: 0;
@@ -46,7 +47,10 @@
     margin: 0;
 }
 
-.profile-icon-desktop {
+.profile-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
     position: absolute;
     top: 10px;
     right: 55px;
@@ -56,26 +60,14 @@
     border-radius: 100%;
     background-color: #4d445f;
     border: 3px solid #B2DAFA;
+    cursor: pointer;
 }
 
-.profile-icon-desktop img {
+
+.profile-icon img {
     width: 100%;
     height: 100%;
     border-radius: 50%;
-}
-
-
-
-.profile-icon {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background-color: #ccc;
-    /* Placeholder for image */
-    background-image: url('https://i.pravatar.cc/60');
-    /* Usando uma imagem de placeholder */
-    background-size: cover;
-    border: 2px solid #9370DB;
 }
 
 .main-container {
@@ -242,24 +234,109 @@
     border-color: #000000;
 }
 
+.form-section {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    background-color: #95B8F6;
+    border-radius: 20px;
+    padding: 20px;
+    width: 30%;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
 
-/* Estilos do mobile */
+.form-section h2 {
+    font-family: "Anta", regular;
+    margin: 0;
+    font-size: 28px;
+    color: #1E1E1E;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.form-group label {
+    font-family: Arial, Helvetica, sans-serif;
+    color: #000000;
+    font-size: 18px;
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+
+.form-group input {
+    border: none;
+    border-radius: 10px;
+    padding: 12px;
+    font-size: 16px;
+    color: #333;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+form button {
+    padding: 15px;
+    border-radius: 10px;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    border: 2px solid #ffffff;
+    /* borda interna */
+    box-shadow: 0 0 0 4px #ADD5FA;
+    /* borda externa simulada */
+    background-color: #B2DAFA;
+    color: #FFFFFF;
+}
+
+
+form button:hover {
+    background-color: #FFFFFF;
+    color: #000000;
+    border-color: #000000;
+}
+
+
+/* Estilos do mobile --------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------------------*/
 
 .header-mobile {
-    padding: 5vh;
     padding-top: 10vh;
 }
 
 .header-mobile h1 {
     font-family: "Anta", regular;
     font-weight: bold;
-    font-size: 5.8vh;
+    font-size: 14vw;
     line-height: 1;
     color: #E6E6FA;
     -webkit-text-stroke-width: 1.5px;
     -webkit-text-stroke-color: #B2DAFA;
     text-shadow:
         3px 3px 5px rgba(0, 0, 0, 0.5);
+}
+
+.profile-icon-mobile {
+    position: absolute;
+    top: 10px;
+    right: 5%;
+    width: 9vh;
+    height: 9vh;
+    align-self: flex-end;
+    border-radius: 100%;
+    background-color: #4d445f;
+    border: 3px solid #B2DAFA;
+}
+
+.profile-icon-mobile img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
 }
 
 .body-mobile {
@@ -273,6 +350,7 @@
 }
 
 .main-container-mobile {
+    padding-top: 6vh;
     width: 65%;
     display: flex;
     flex-direction: column;
@@ -311,4 +389,25 @@
     width: 30vw;
     height: auto;
     aspect-ratio: 1 / 1;
+}
+
+.form-section-mobile {
+    display: flex;
+    flex-direction: column;
+    background-color: #95B8F6;
+    border-radius: 20px;
+    padding: 20px;
+    width: 60%;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    margin-top: 5vh;
+    /* Centralização */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.form-section-mobile h2 {
+    margin: 0px;
+    margin-bottom: 1vh;
 }

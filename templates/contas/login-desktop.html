@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<body class="body">
+    <header class="header">
+        <h1>EduVision IA</h1>
+    </header>
+    <div class="form-section">
+        <h2>Login</h2>
+        <form method="post" class="form">
+            {% csrf_token %}
+            {% for field in form.visible_fields %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}
+                <small class="form-text text-muted">{{ field.help_text }}</small>
+                {% endif %}
+            </div>
+            {% endfor %}
+            <button type="submit">Entrar</button>
+        </form>        
+        <p>Não tem uma conta? <a href="{% url 'cadastro' %}">Cadastre-se</a></p>    
+    </div>
+</main>
+{% endblock %}
