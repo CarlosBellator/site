@@ -3,7 +3,9 @@
 {% block content %}
 <body class="body">
     <header class="header">
-        <div class="profile-icon"> <img src="{{ user_profile.foto_perfil.url }}" alt="">
+        <a href="{% url 'conta' %}">
+            <div class="profile-icon"> <img src="{{ user_profile.foto_perfil.url }}" alt="">
+        </a>
         </div>
         <h1>EduVision IA</h1>
     </header>

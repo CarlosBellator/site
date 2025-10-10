@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-aeoyl7ay@%6&9pkad+*s@b13^0qwhwo8wws#c(@=-@(hbhogp@
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['0.0.0.0', '10.190.20.93', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['0.0.0.0', '192.168.190.99', 'localhost', '127.0.0.1']
 
 
 # Application definition
@@ -127,7 +127,17 @@ MEDIA_ROOT = os.path.join(str(BASE_DIR), 'media')
 
 MEDIA_URL = '/media/'
 
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/'
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Messages
+from django.contrib.messages import constants as messages
+MESSAGE_TAGS= {
+      messages.ERROR: 'error',
+      messages.SUCCESS: 'success'
+}

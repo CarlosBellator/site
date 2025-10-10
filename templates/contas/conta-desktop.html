@@ -1,0 +1,206 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+  <body class="body">
+    {% csrf_token %}
+    <header class="header">
+      <a href="{% url 'home' %}"><h1>EduVision IA</h1></a>
+    </header>
+    <main class="profile-config-container">
+      <div class="profile-config">
+        <a href="#" onclick="openPhotoModal()"><img src="{{ user_profile.foto_perfil.url }}" alt="" id="profile-image" /></a>
+      </div>
+      <input type="text" id="nome" name="nome" value="{{ name }}" />
+
+      <!-- Modal para upload de foto -->
+      <div id="photoModal" class="modal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2>Alterar Foto de Perfil</h2>
+            <span class="close" onclick="closePhotoModal()">&times;</span>
+          </div>
+          <div class="modal-body">
+            <form id="photoForm" enctype="multipart/form-data">
+              {% csrf_token %}
+              <div class="file-input-container">
+                <input type="file" id="photoInput" name="foto_perfil" accept="image/*" required />
+                <label for="photoInput" class="file-input-label">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" fill="currentColor" />
+                  </svg>Escolher Arquivo
+                </label>
+              </div>
+              <div id="preview-container" style="display: none;">
+                <img id="preview-image" src="" alt="Preview" style="max-width: 200px; max-height: 200px; border-radius: 50%;" />
+              </div>
+              <div class="modal-buttons">
+                <button type="button" onclick="closePhotoModal()" class="btn-cancel">Cancelar</button>
+                <button type="submit" class="btn-save">Salvar</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      <div class="config-buttons">
+        <a href="">
+          <button id="senha-btn">
+            <svg width="56" height="52" viewBox="0 0 56 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M16.3333 23.8333V15.1666C16.3333 12.2935 17.5625 9.53797 19.7504 7.50632C21.9383 5.47468 24.9058 4.33331 28 4.33331C31.0942 4.33331 34.0617 5.47468 36.2496 7.50632C38.4375 9.53797 39.6667 12.2935 39.6667 15.1666V23.8333M11.6667 23.8333H44.3333C46.9107 23.8333 49 25.7734 49 28.1666V43.3333C49 45.7265 46.9107 47.6666 44.3333 47.6666H11.6667C9.08934 47.6666 7 45.7265 7 43.3333V28.1666C7 25.7734 9.08934 23.8333 11.6667 23.8333Z" stroke="#B2DAFA" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>Alterar Senha
+          </button>
+        </a>
+        <a href="{% url 'logout' %}">
+          <button id="logout-btn">
+            <svg width="56" height="51" viewBox="0 0 56 51" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M21 44.625H11.6667C10.429 44.625 9.242 44.1772 8.36683 43.3802C7.49167 42.5832 7 41.5022 7 40.375V10.625C7 9.49783 7.49167 8.41683 8.36683 7.6198C9.242 6.82277 10.429 6.375 11.6667 6.375H21M37.3333 36.125L49 25.5M49 25.5L37.3333 14.875M49 25.5H21" stroke="#B2DAFA" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>Sair
+          </button>
+        </a>
+      </div>
+      <script>
+        // Função para atualizar nome
+        document.getElementById('nome').addEventListener('input', function () {
+          const novoNome = this.value
+          const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value
+          fetch('{% url "atualizar_nome" %}', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({
+              nome: novoNome
+            })
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.success) {
+                console.log('Nome atualizado com sucesso')
+              }
+            })
+            .catch((error) => console.error('Erro:', error))
+        })
+        
+        // Funções para controlar o modal de foto
+        function openPhotoModal() {
+          document.getElementById('photoModal').style.display = 'block'
+          document.body.style.overflow = 'hidden' // Previne scroll da página
+        }
+        
+        function closePhotoModal() {
+          document.getElementById('photoModal').style.display = 'none'
+          document.body.style.overflow = 'auto' // Restaura scroll da página
+          // Limpa o preview
+          document.getElementById('preview-container').style.display = 'none'
+          document.getElementById('photoInput').value = ''
+        }
+        
+        // Fechar modal clicando fora dele
+        window.onclick = function (event) {
+          const modal = document.getElementById('photoModal')
+          if (event.target === modal) {
+            closePhotoModal()
+          }
+        }
+        
+        // Preview da imagem selecionada
+        document.getElementById('photoInput').addEventListener('change', function (event) {
+          const file = event.target.files[0]
+          if (file) {
+            // Verificar se é uma imagem
+            if (!file.type.startsWith('image/')) {
+              alert('Por favor, selecione apenas arquivos de imagem.')
+              this.value = ''
+              return
+            }
+        
+            // Verificar tamanho do arquivo (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+              alert('O arquivo deve ter no máximo 5MB.')
+              this.value = ''
+              return
+            }
+        
+            const reader = new FileReader()
+            reader.onload = function (e) {
+              document.getElementById('preview-image').src = e.target.result
+              document.getElementById('preview-container').style.display = 'block'
+            }
+            reader.readAsDataURL(file)
+          }
+        })
+        
+        // Enviar formulário de foto
+        document.getElementById('photoForm').addEventListener('submit', function (e) {
+          e.preventDefault()
+        
+          const fileInput = document.getElementById('photoInput')
+          const file = fileInput.files[0]
+        
+          if (!file) {
+            alert('Por favor, selecione uma imagem.')
+            return
+          }
+        
+          const formData = new FormData()
+          formData.append('foto_perfil', file)
+          formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value)
+        
+          // Desabilitar botão de envio
+          const submitBtn = document.querySelector('.btn-save')
+          submitBtn.disabled = true
+          submitBtn.textContent = 'Enviando...'
+        
+          fetch('{% url "upload_foto_perfil" %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+              'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+          })
+            .then((response) => {
+              console.log('Status da resposta:', response.status)
+              console.log('Content-Type:', response.headers.get('content-type'))
+        
+              if (!response.ok) {
+                return response.text().then((text) => {
+                  console.error('Resposta de erro:', text)
+                  throw new Error(`HTTP error! status: ${response.status}, response: ${text}`)
+                })
+              }
+        
+              const contentType = response.headers.get('content-type')
+              if (!contentType || !contentType.includes('application/json')) {
+                return response.text().then((text) => {
+                  console.error('Resposta não é JSON:', text)
+                  throw new Error('Resposta não é JSON válido')
+                })
+              }
+        
+              return response.json()
+            })
+            .then((data) => {
+              console.log('Dados recebidos:', data)
+              if (data.success) {
+                // Atualizar a imagem de perfil na página
+                document.getElementById('profile-image').src = data.new_image_url + '?' + new Date().getTime()
+                closePhotoModal()
+                alert('Foto de perfil atualizada com sucesso!')
+              } else {
+                alert('Erro ao atualizar foto: ' + (data.message || 'Erro desconhecido'))
+              }
+            })
+            .catch((error) => {
+              console.error('Erro completo:', error)
+              alert('Erro ao enviar a foto. Verifique o console para mais detalhes.')
+            })
+            .finally(() => {
+              // Reabilitar botão
+              submitBtn.disabled = false
+              submitBtn.textContent = 'Salvar'
+            })
+        })
+      </script>
+    </main>
+  </body>
+{% endblock %}

@@ -18,6 +18,7 @@
                 {% endif %}
             </div>
             {% endfor %}
+            {% include 'partials/_alertas.html'%}
             <button type="submit">Entrar</button>
         </form>        
         <p>Não tem uma conta? <a href="{% url 'cadastro' %}">Cadastre-se</a></p>    
