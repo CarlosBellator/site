@@ -275,6 +275,7 @@
     display: block;
     margin: 0 auto;
 }
+
 .profile-config-container a {
     height: 100%;
     width: 100%;
@@ -404,10 +405,22 @@ form button:hover {
     border-color: #000000;
 }
 
+#passwordForm .form-group input {
+    font-size: 16px;
+    padding: 10px;
+    background-color: rgb(194, 198, 202);
+}
+
+#passwordForm {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
 .alert {
     --bs-alert-bg: transparent;
     --bs-alert-padding-x: 1rem;
-    --bs-alert-padding-y: 0rem;
+    --bs-alert-padding-y: 1rem;
     --bs-alert-margin-bottom: 1rem;
     --bs-alert-color: inherit;
     --bs-alert-border-color: transparent;
@@ -419,6 +432,23 @@ form button:hover {
     background-color: var(--bs-alert-bg);
     border: var(--bs-alert-border);
     border-radius: var(--bs-alert-border-radius);
+    animation: slideDown 0.3s ease-out;
+}
+
+.alert-slim {
+    --bs-alert-padding-y: 0.25rem;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .alert-success {
@@ -426,13 +456,15 @@ form button:hover {
     --bs-alert-bg: #d1e7dd;
     --bs-alert-border-color: #badbcc;
 }
+
 .alert-error {
     --bs-alert-color: #842029;
     --bs-alert-bg: #f8d7da;
     --bs-alert-border-color: #f5c2c7;
 }
+
 a {
-  text-decoration: none;
+    text-decoration: none;
 }
 
 /* Estilos do Modal para Upload de Foto */
@@ -449,8 +481,13 @@ a {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 .modal-content {
@@ -466,11 +503,12 @@ a {
 }
 
 @keyframes slideIn {
-    from { 
+    from {
         transform: translateY(-50px);
         opacity: 0;
     }
-    to { 
+
+    to {
         transform: translateY(0);
         opacity: 1;
     }
@@ -555,7 +593,8 @@ a {
     margin-top: 30px;
 }
 
-.btn-cancel, .btn-save {
+.btn-cancel,
+.btn-save {
     padding: 12px 25px;
     border: none;
     border-radius: 8px;

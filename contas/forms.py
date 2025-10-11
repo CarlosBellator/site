@@ -54,3 +54,72 @@ class LoginForm(forms.Form):
             attrs={'class': 'form-control', 'placeholder': 'Digite sua senha'}
         ), label='Senha'
     )
+
+class AlterarSenhaForm(forms.Form):
+    senha_atual = forms.CharField(
+        widget=forms.PasswordInput(
+            attrs={'class': 'form-control', 'placeholder': 'Digite sua senha atual'}
+        ),
+        label='Senha Atual',
+        max_length=128
+    )
+    nova_senha = forms.CharField(
+        widget=forms.PasswordInput(
+            attrs={'class': 'form-control', 'placeholder': 'Digite a nova senha'}
+        ),
+        label='Nova Senha',
+        min_length=8,
+        max_length=128,
+        help_text='A senha deve ter pelo menos 8 caracteres.'
+    )
+    confirmar_nova_senha = forms.CharField(
+        widget=forms.PasswordInput(
+            attrs={'class': 'form-control', 'placeholder': 'Confirme a nova senha'}
+        ),
+        label='Confirmar Nova Senha',
+        max_length=128
+    )
+
+    def __init__(self, user, *args, **kwargs):
+        self.user = user
+        super().__init__(*args, **kwargs)
+
+    def clean_senha_atual(self):
+        senha_atual = self.cleaned_data.get('senha_atual')
+        if not self.user.check_password(senha_atual):
+            raise forms.ValidationError('Senha atual incorreta.')
+        return senha_atual
+
+    def clean_confirmar_nova_senha(self):
+        nova_senha = self.cleaned_data.get('nova_senha')
+        confirmar_nova_senha = self.cleaned_data.get('confirmar_nova_senha')
+        
+        if nova_senha and confirmar_nova_senha:
+            if nova_senha != confirmar_nova_senha:
+                raise forms.ValidationError('As senhas não coincidem.')
+        return confirmar_nova_senha
+
+    def clean_nova_senha(self):
+        nova_senha = self.cleaned_data.get('nova_senha')
+        
+        # Validações de segurança da senha
+        if nova_senha:
+            # Verifica se tem pelo menos 8 caracteres
+            if len(nova_senha) < 8:
+                raise forms.ValidationError('A senha deve ter pelo menos 8 caracteres.')
+            
+            # Verifica se não é muito simples
+            if nova_senha.isdigit():
+                raise forms.ValidationError('A senha não pode conter apenas números.')
+                
+            # Verifica se não é igual ao email do usuário
+            if nova_senha.lower() == self.user.email.lower():
+                raise forms.ValidationError('A senha não pode ser igual ao seu email.')
+        
+        return nova_senha
+
+    def save(self):
+        nova_senha = self.cleaned_data['nova_senha']
+        self.user.set_password(nova_senha)
+        self.user.save()
+        return self.user

@@ -33,6 +33,12 @@
               <div id="preview-container" style="display: none;">
                 <img id="preview-image" src="" alt="Preview" style="max-width: 200px; max-height: 200px; border-radius: 50%;" />
               </div>
+
+              <!-- Container para mensagens de erro/sucesso -->
+              <div id="photo-message-container" class="message-container" style="display: none;">
+                <div id="photo-message-content" class="message-content"></div>
+              </div>
+
               <div class="modal-buttons">
                 <button type="button" onclick="closePhotoModal()" class="btn-cancel">Cancelar</button>
                 <button type="submit" class="btn-save">Salvar</button>
@@ -41,8 +47,44 @@
           </div>
         </div>
       </div>
+      <!-- Fim Modal para upload de foto -->
+      <!-- Modal para mudar senha -->
+      <div id="passwordModal" class="modal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2>Alterar Senha</h2>
+            <span class="close" onclick="closePasswordModal()">&times;</span>
+          </div>
+          <div class="modal-body">
+            <form id="passwordForm" method="POST" action="{% url 'alterar_senha' %}">
+              {% csrf_token %}
+              <div class="form-group">
+                <label for="senha_atual">Senha atual:</label>
+                <input type="password" name="senha_atual" id="senha_atual" placeholder="Senha Atual" required />
+              </div>
+              <div class="form-group">
+                <label for="nova_senha">Nova senha:</label>
+                <input type="password" name="nova_senha" id="nova_senha" placeholder="Nova Senha" required />
+              </div>
+              <div class="form-group">
+                <label for="confirmar_senha">Confirmar nova senha:</label>
+                <input type="password" name="confirmar_senha" id="confirmar_senha" placeholder="Confirmar Nova Senha" required />
+              </div>
+              <!-- Container para mensagens de erro/sucesso -->
+              <div id="password-message-container" class="message-container" style="display: none;">
+                <div id="password-message-content" class="message-content"></div>
+              </div>
+
+              <div class="modal-buttons">
+                <button type="button" onclick="closePasswordModal()" class="btn-cancel">Cancelar</button>
+                <button type="submit" class="btn-save">Alterar Senha</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
       <div class="config-buttons">
-        <a href="">
+        <a onclick="openPasswordModal()">
           <button id="senha-btn">
             <svg width="56" height="52" viewBox="0 0 56 52" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M16.3333 23.8333V15.1666C16.3333 12.2935 17.5625 9.53797 19.7504 7.50632C21.9383 5.47468 24.9058 4.33331 28 4.33331C31.0942 4.33331 34.0617 5.47468 36.2496 7.50632C38.4375 9.53797 39.6667 12.2935 39.6667 15.1666V23.8333M11.6667 23.8333H44.3333C46.9107 23.8333 49 25.7734 49 28.1666V43.3333C49 45.7265 46.9107 47.6666 44.3333 47.6666H11.6667C9.08934 47.6666 7 45.7265 7 43.3333V28.1666C7 25.7734 9.08934 23.8333 11.6667 23.8333Z" stroke="#B2DAFA" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
@@ -90,9 +132,33 @@
         function closePhotoModal() {
           document.getElementById('photoModal').style.display = 'none'
           document.body.style.overflow = 'auto' // Restaura scroll da página
-          // Limpa o preview
+          // Limpa o preview e mensagens
           document.getElementById('preview-container').style.display = 'none'
           document.getElementById('photoInput').value = ''
+          hideMessage()
+        }
+        
+        // Função para mostrar mensagens no modal
+        function showPhotoMessage(message, type = 'error') {
+          const messageContainer = document.getElementById('photo-message-container')
+          const messageContent = document.getElementById('photo-message-content')
+
+          messageContent.textContent = message
+          messageContainer.className = `alert alert-slim alert-${type}`
+          messageContainer.style.display = 'block'
+        
+          // Auto-esconder mensagem de sucesso após 3 segundos
+          if (type === 'success') {
+            messageContainer.className = `alert alert-slim alert-${type}`
+            setTimeout(() => {
+              hideMessage()
+            }, 3000)
+          }
+        }
+        
+        // Função para esconder mensagens
+        function hideMessage() {
+          document.getElementById('message-container').style.display = 'none'
         }
         
         // Fechar modal clicando fora dele
@@ -107,16 +173,19 @@
         document.getElementById('photoInput').addEventListener('change', function (event) {
           const file = event.target.files[0]
           if (file) {
+            // Limpar mensagens anteriores
+            hideMessage()
+        
             // Verificar se é uma imagem
             if (!file.type.startsWith('image/')) {
-              alert('Por favor, selecione apenas arquivos de imagem.')
+              showPhotoMessage('Por favor, selecione apenas arquivos de imagem.', 'error')
               this.value = ''
               return
             }
         
             // Verificar tamanho do arquivo (max 5MB)
             if (file.size > 5 * 1024 * 1024) {
-              alert('O arquivo deve ter no máximo 5MB.')
+              showPhotoMessage('O arquivo deve ter no máximo 5MB.', 'error')
               this.value = ''
               return
             }
@@ -138,7 +207,7 @@
           const file = fileInput.files[0]
         
           if (!file) {
-            alert('Por favor, selecione uma imagem.')
+            showPhotoMessage('Por favor, selecione uma imagem.', 'error')
             return
           }
         
@@ -184,15 +253,17 @@
               if (data.success) {
                 // Atualizar a imagem de perfil na página
                 document.getElementById('profile-image').src = data.new_image_url + '?' + new Date().getTime()
-                closePhotoModal()
-                alert('Foto de perfil atualizada com sucesso!')
+                showPhotoMessage('Foto de perfil atualizada com sucesso!', 'success')
+                setTimeout(() => {
+                  closePhotoModal()
+                }, 1500)
               } else {
-                alert('Erro ao atualizar foto: ' + (data.message || 'Erro desconhecido'))
+                showPhotoMessage('Erro ao atualizar foto: ' + (data.message || 'Erro desconhecido'), 'error')
               }
             })
             .catch((error) => {
               console.error('Erro completo:', error)
-              alert('Erro ao enviar a foto. Verifique o console para mais detalhes.')
+              showPhotoMessage('Erro ao enviar a foto. Tente novamente.', 'error')
             })
             .finally(() => {
               // Reabilitar botão
@@ -200,6 +271,141 @@
               submitBtn.textContent = 'Salvar'
             })
         })
+
+        // Funções para controlar o modal de senha
+        function openPasswordModal() {
+          document.getElementById('passwordModal').style.display = 'block'
+          document.body.style.overflow = 'hidden' // Previne scroll da página
+        }
+
+        function closePasswordModal() {
+          document.getElementById('passwordModal').style.display = 'none'
+          document.body.style.overflow = 'auto' // Restaura scroll da página
+          // Limpa os campos de senha e mensagens
+          document.getElementById('senha_atual').value = ''
+          document.getElementById('nova_senha').value = ''
+          document.getElementById('confirmar_senha').value = ''
+          hidePasswordMessage()
+        }
+
+        // Enviar formulário de redefinição de senha
+        document.getElementById('passwordForm').addEventListener('submit', function (e) {
+          e.preventDefault()
+          const senhaAtual = document.getElementById('senha_atual').value
+          const novaSenha = document.getElementById('nova_senha').value
+          const confirmarSenha = document.getElementById('confirmar_senha').value
+
+          if (!senhaAtual || !novaSenha || !confirmarSenha) {
+            showPasswordMessage('Por favor, preencha todos os campos.', 'error')
+            return
+          }
+
+          if (novaSenha !== confirmarSenha) {
+            showPasswordMessage('As senhas não coincidem.', 'error')
+            return
+          }
+
+          if (novaSenha.length < 8) {
+            showPasswordMessage('A senha deve ter pelo menos 8 caracteres.', 'error')
+            return
+          }
+
+          const data = {
+            senha_atual: senhaAtual,
+            nova_senha: novaSenha,
+            confirmar_nova_senha: confirmarSenha
+          }
+        
+          // Desabilitar botão de envio
+          const submitBtn = document.querySelector('#passwordForm .btn-save')
+          submitBtn.disabled = true
+          submitBtn.textContent = 'Alterando...'
+
+          fetch('{% url "alterar_senha" %}', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify(data)
+          })
+            .then((response) => {
+              console.log('Status da resposta:', response.status)
+        
+              if (!response.ok) {
+                return response.text().then((text) => {
+                  console.error('Resposta de erro:', text)
+                  throw new Error(`HTTP error! status: ${response.status}`)
+                })
+              }
+        
+              return response.json()
+            })
+            .then((data) => {
+              console.log('Dados recebidos:', data)
+              if (data.success) {
+                showPasswordMessage('Senha alterada com sucesso!', 'success')
+                setTimeout(() => {
+                  closePasswordModal()
+                  // Opcional: recarregar a página para garantir que a sessão seja atualizada
+                  window.location.reload()
+                }, 1500)
+              } else {
+                showPasswordMessage(data.message || 'Erro ao alterar senha.', 'error')
+              }
+            })
+            .catch((error) => {
+              console.error('Erro completo:', error)
+              showPasswordMessage('Erro ao alterar senha. Tente novamente.', 'error')
+            })
+            .finally(() => {
+              // Reabilitar botão
+              submitBtn.disabled = false
+              submitBtn.textContent = 'Alterar Senha'
+            })
+        })
+        // Função para mostrar mensagens no modal
+        function showPasswordMessage(message, type = 'error') {
+          const messageContainer = document.getElementById('password-message-container')
+          const messageContent = document.getElementById('password-message-content')
+
+          messageContent.textContent = message
+          
+          // Remove classes existentes e adiciona as novas
+          messageContainer.className = 'message-container'
+          if (type === 'success') {
+            messageContainer.classList.add('alert', 'alert-slim', 'alert-success')
+          } else {
+            messageContainer.classList.add('alert', 'alert-slim', 'alert-error')
+          }
+          
+          messageContainer.style.display = 'block'
+        
+          // Auto-esconder mensagem de sucesso após 3 segundos
+          if (type === 'success') {
+            setTimeout(() => {
+              hidePasswordMessage()
+            }, 3000)
+          }
+        }
+        
+        // Função para esconder mensagens
+        function hideMessage() {
+          document.getElementById('message-container').style.display = 'none'
+        }
+
+        // Função para esconder mensagens de senha
+        function hidePasswordMessage() {
+          document.getElementById('password-message-container').style.display = 'none'
+        }
+        
+        // Fechar modal clicando fora dele
+        window.onclick = function (event) {
+          const modal = document.getElementById('passwordModal')
+          if (event.target === modal) {
+            closePasswordModal()
+          }
+        }
       </script>
     </main>
   </body>

@@ -1,7 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
-from contas.forms import CadastroForm, LoginForm
+from contas.forms import CadastroForm, LoginForm, AlterarSenhaForm
 from django.contrib import auth , messages
 from django.contrib.auth.models import User
 from django.views.decorators.csrf import csrf_exempt
@@ -106,6 +106,7 @@ def atualizar_nome(request):
     
     return JsonResponse({'success': False, 'message': 'Método não permitido'})
 
+
 @login_required
 def upload_foto_perfil(request):
     print(f"Método recebido: {request.method}")
@@ -117,6 +118,7 @@ def upload_foto_perfil(request):
             # Verificar se um arquivo foi enviado
             if 'foto_perfil' not in request.FILES:
                 print("Nenhum arquivo 'foto_perfil' encontrado")
+                
                 return JsonResponse({'success': False, 'message': 'Nenhum arquivo enviado'})
             
             foto = request.FILES['foto_perfil']
@@ -124,11 +126,12 @@ def upload_foto_perfil(request):
             
             # Verificar se é uma imagem
             if not foto.content_type.startswith('image/'):
-                print(f"Tipo de arquivo inválido: {foto.content_type}")
+                messages.error(request, 'Arquivo deve ser uma imagem')
                 return JsonResponse({'success': False, 'message': 'Arquivo deve ser uma imagem'})
             
             # Verificar tamanho do arquivo (max 5MB)
             if foto.size > 5 * 1024 * 1024:
+                messages.error(request, 'Arquivo deve ter no máximo 5MB')
                 print(f"Arquivo muito grande: {foto.size} bytes")
                 return JsonResponse({'success': False, 'message': 'Arquivo deve ter no máximo 5MB'})
             
@@ -167,4 +170,98 @@ def upload_foto_perfil(request):
             return JsonResponse({'success': False, 'message': f'Erro interno: {str(e)}'})
     
     print(f"Método não permitido: {request.method}")
-    return JsonResponse({'success': False, 'message': 'Método não permitido'})
+    return render(request, 'contas/popup-enviar-foto.html')
+
+@login_required
+def alterar_senha(request):
+    """
+    View para alterar a senha do usuário logado.
+    Aceita requisições POST (JSON ou form) e GET (renderiza formulário).
+    """
+    print(f"Método recebido: {request.method}")
+    print(f"Usuário autenticado: {request.user.is_authenticated}")
+    
+    if request.method == 'POST':
+        # Verifica se é uma requisição AJAX (JSON)
+        if request.headers.get('Content-Type') == 'application/json':
+            try:
+                data = json.loads(request.body)
+                form = AlterarSenhaForm(user=request.user, data=data)
+            except json.JSONDecodeError:
+                return JsonResponse({'success': False, 'message': 'Dados JSON inválidos.'})
+        else:
+            # Requisição de formulário normal
+            form = AlterarSenhaForm(user=request.user, data=request.POST)
+        
+        print(f"Dados do formulário: {form.data}")
+        
+        if form.is_valid():
+            try:
+                # Salva a nova senha
+                form.save()
+                
+                # Re-autentica o usuário com a nova senha para manter a sessão ativa
+                from django.contrib.auth import update_session_auth_hash
+                update_session_auth_hash(request, request.user)
+                
+                print("Senha alterada com sucesso")
+                messages.success(request, 'Senha alterada com sucesso!')
+                
+                # Retorna resposta JSON ou redireciona dependendo do tipo de requisição
+                if request.headers.get('Content-Type') == 'application/json':
+                    return JsonResponse({
+                        'success': True, 
+                        'message': 'Senha alterada com sucesso!'
+                    })
+                else:
+                    return redirect('conta')
+                    
+            except Exception as e:
+                print(f"Erro ao alterar senha: {str(e)}")
+                error_message = 'Erro interno do servidor. Tente novamente.'
+                
+                if request.headers.get('Content-Type') == 'application/json':
+                    return JsonResponse({
+                        'success': False, 
+                        'message': error_message
+                    })
+                else:
+                    messages.error(request, error_message)
+        else:
+            # Formulário inválido - retorna os erros
+            print(f"Erros do formulário: {form.errors}")
+            
+            # Coleta todos os erros em uma mensagem
+            error_messages = []
+            for field, errors in form.errors.items():
+                for error in errors:
+                    error_messages.append(f"{error}")
+            
+            error_message = ' '.join(error_messages)
+            
+            if request.headers.get('Content-Type') == 'application/json':
+                return JsonResponse({
+                    'success': False, 
+                    'message': error_message,
+                    'errors': form.errors
+                })
+            else:
+                messages.error(request, error_message)
+    else:
+        # Requisição GET - cria formulário vazio
+        form = AlterarSenhaForm(user=request.user)
+    
+    # Para requisições GET ou POST com formulário inválido, renderiza a página
+    user_agent = request.META.get('HTTP_USER_AGENT', '').lower()
+    is_mobile = any(device in user_agent for device in ['mobile', 'android', 'iphone'])
+    
+    context = {
+        'form': form,
+        'user': request.user
+    }
+    
+    # Se for mobile, você pode criar um template específico
+    if is_mobile:
+        return render(request, 'contas/alterar-senha-mobile.html', context)
+    else:
+        return render(request, 'contas/alterar-senha-desktop.html', context)
