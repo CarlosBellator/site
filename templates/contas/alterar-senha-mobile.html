@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+  <body class="body">
+    {% csrf_token %}
+    {% include 'partials/_seta-retorno.html' %}
+    <main class="password-config-container-mobile">
+      <form id="passwordForm" class="password-form-mobile" method="POST" action="{% url 'alterar_senha' %}">
+        <div id="div_senha_atual" class="form-group">
+          <label for="senha_atual">Senha atual:</label>
+          <input type="password" name="senha_atual" id="senha_atual" placeholder="Senha Atual" required />
+        </div>
+        <div class="form-group">
+          <label for="nova_senha">Nova senha:</label>
+          <input type="password" name="nova_senha" id="nova_senha" placeholder="Nova Senha" required />
+        </div>
+        <div class="form-group">
+          <label for="confirmar_senha">Confirmar nova senha:</label>
+          <input type="password" name="confirmar_senha" id="confirmar_senha" placeholder="Confirmar Nova Senha" required />
+        </div>
+        <!-- Container para mensagens de erro/sucesso -->
+        <div id="password-message-container" class="message-container" style="display: none;">
+          <div id="password-message-content" class="message-content"></div>
+        </div>
+        <button type="submit" class="btn-save">Confirmar</button>
+      </form>
+      <script>
+        // Enviar formulário de redefinição de senha
+        document.getElementById('passwordForm').addEventListener('submit', function (e) {
+          e.preventDefault()
+          const senhaAtual = document.getElementById('senha_atual').value
+          const novaSenha = document.getElementById('nova_senha').value
+          const confirmarSenha = document.getElementById('confirmar_senha').value
+        
+          if (!senhaAtual || !novaSenha || !confirmarSenha) {
+            showPasswordMessage('Por favor, preencha todos os campos.', 'error')
+            return
+          }
+        
+          if (novaSenha !== confirmarSenha) {
+            showPasswordMessage('As senhas não coincidem.', 'error')
+            return
+          }
+        
+          if (novaSenha.length < 8) {
+            showPasswordMessage('A senha deve ter pelo menos 8 caracteres.', 'error')
+            return
+          }
+        
+          const data = {
+            senha_atual: senhaAtual,
+            nova_senha: novaSenha,
+            confirmar_nova_senha: confirmarSenha
+          }
+        
+          // Desabilitar botão de envio
+          const submitBtn = document.querySelector('#passwordForm .btn-save')
+          submitBtn.disabled = true
+          submitBtn.textContent = 'Alterando...'
+        
+          fetch('{% url "alterar_senha" %}', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify(data)
+          })
+            .then((response) => {
+              console.log('Status da resposta:', response.status)
+        
+              if (!response.ok) {
+                return response.text().then((text) => {
+                  console.error('Resposta de erro:', text)
+                  throw new Error(`HTTP error! status: ${response.status}`)
+                })
+              }
+        
+              return response.json()
+            })
+            .then((data) => {
+              console.log('Dados recebidos:', data)
+              if (data.success) {
+                showPasswordMessage('Senha alterada com sucesso!', 'success')
+                setTimeout(() => {
+                  closePasswordModal()
+                  // Opcional: recarregar a página para garantir que a sessão seja atualizada
+                  window.location.reload()
+                }, 1500)
+              } else {
+                showPasswordMessage(data.message || 'Erro ao alterar senha.', 'error')
+              }
+            })
+            .catch((error) => {
+              console.error('Erro completo:', error)
+              showPasswordMessage('Erro ao alterar senha. Tente novamente.', 'error')
+            })
+            .finally(() => {
+              // Reabilitar botão
+              submitBtn.disabled = false
+              submitBtn.textContent = 'Alterar Senha'
+            })
+        })
+        // Função para mostrar mensagens no modal
+        function showPasswordMessage(message, type = 'error') {
+          const messageContainer = document.getElementById('password-message-container')
+          const messageContent = document.getElementById('password-message-content')
+        
+          messageContent.textContent = message
+        
+          // Remove classes existentes e adiciona as novas
+          messageContainer.className = 'message-container'
+          if (type === 'success') {
+            messageContainer.classList.add('alert', 'alert-slim', 'alert-success')
+          } else {
+            messageContainer.classList.add('alert', 'alert-slim', 'alert-error')
+          }
+        
+          messageContainer.style.display = 'block'
+        
+          // Auto-esconder mensagem de sucesso após 3 segundos
+          if (type === 'success') {
+            setTimeout(() => {
+              hidePasswordMessage()
+            }, 3000)
+          }
+        }
+        
+        // Função para esconder mensagens do modal de foto
+        function hidePhotoMessage() {
+          document.getElementById('photo-message-container').style.display = 'none'
+        }
+        
+        // Função para esconder mensagens do modal de senha
+        function hidePasswordMessage() {
+          document.getElementById('password-message-container').style.display = 'none'
+        }
+        // Fechar modais clicando fora deles
+        window.onclick = function (event) {
+          const photoModal = document.getElementById('photoModal')
+          const passwordModal = document.getElementById('passwordModal')
+        
+          if (event.target === photoModal) {
+            closePhotoModal()
+          }
+        
+          if (event.target === passwordModal) {
+            closePasswordModal()
+          }
+        }
+      </script>
+    </main>
+  </body>
+{% endblock %}

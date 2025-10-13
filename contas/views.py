@@ -1,3 +1,4 @@
+from multiprocessing import context
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
@@ -265,3 +266,12 @@ def alterar_senha(request):
         return render(request, 'contas/alterar-senha-mobile.html', context)
     else:
         return render(request, 'contas/alterar-senha-desktop.html', context)
+
+@login_required    
+def conta_alterar_senha_mobile(request):
+    user_agent = request.META.get('HTTP_USER_AGENT', '').lower()
+    is_mobile = any(device in user_agent for device in ['mobile', 'android', 'iphone'])
+    if is_mobile:
+        return render(request, 'contas/alterar-senha-mobile.html')
+    else:
+        return redirect('conta')
