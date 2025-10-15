@@ -64,6 +64,10 @@ def cadastro(request):
         if form.is_valid():
             form.save()
             return redirect('login')
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{error}")
     user_agent = request.META.get('HTTP_USER_AGENT', '').lower()
     is_mobile = any(device in user_agent for device in ['mobile', 'android', 'iphone'])
     if is_mobile:
