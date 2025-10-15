@@ -1,0 +1,8 @@
+opencv-python-headless==4.8.1.78
+triangle
+ultralytics
+numpy
+shapely
+trimesh
+google-generativeai
+python-dotenv

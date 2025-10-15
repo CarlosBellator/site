@@ -6,7 +6,7 @@ from django.views.decorators.http import require_http_methods
 import json
 import os
 from contas.models import userProfile
-from home.EduVision_IA.main import clear
+from home.EduVision_IA.main import import_img, cut_image
 from home.EduVision_IA.graph_creator import graficoobj
 
 
@@ -32,9 +32,6 @@ def index(request):
 @login_required
 @require_http_methods(["POST"])
 def upload_file(request):
-    """
-    View para gerenciar o upload de arquivos via drag and drop
-    """
     try:
         if 'file' not in request.FILES:
             return JsonResponse({
@@ -73,7 +70,8 @@ def upload_file(request):
         with open(file_path, 'wb+') as destination:
             for chunk in uploaded_file.chunks():
                 destination.write(chunk)
-        
+        image, nome_arquivo = import_img(file_path)
+        cut_image(image, nome_arquivo)
         return JsonResponse({
             'success': True,
             'message': 'Arquivo enviado com sucesso',
@@ -86,4 +84,4 @@ def upload_file(request):
         return JsonResponse({
             'success': False,
             'error': f'Erro interno do servidor: {str(e)}'
-        }, status=500)
+        }, status=500)    
