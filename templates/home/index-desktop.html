@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block content %}
+
 <body class="body">
     {% csrf_token %}
     <header class="header">
@@ -59,198 +60,206 @@
             </div>
         </section>
     </main>
-    
-    <script>document.addEventListener('DOMContentLoaded', function() {
-    const uploadBox = document.querySelector('.upload-box');
-    const fileInput = document.getElementById('file-input');
-    
-    // Adicionar classe CSS para indicar que aceita drop
-    uploadBox.classList.add('drag-drop-area');
-    
-    // Prevenir comportamento padrão do navegador
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        uploadBox.addEventListener(eventName, preventDefaults, false);
-        document.body.addEventListener(eventName, preventDefaults, false);
-    });
-    
-    // Destacar área de drop quando arquivo está sendo arrastado
-    ['dragenter', 'dragover'].forEach(eventName => {
-        uploadBox.addEventListener(eventName, highlight, false);
-    });
-    
-    ['dragleave', 'drop'].forEach(eventName => {
-        uploadBox.addEventListener(eventName, unhighlight, false);
-    });
-    
-    // Gerenciar o evento de drop
-    uploadBox.addEventListener('drop', handleDrop, false);
-    
-    // Permitir clique na área para abrir seletor de arquivos
-    uploadBox.addEventListener('click', function(e) {
-        if (e.target !== fileInput) {
-            fileInput.click();
-        }
-    });
-    
-    // Gerenciar seleção de arquivo através do input
-    fileInput.addEventListener('change', function(e) {
-        handleFiles(e.target.files);
-    });
-    
-    function preventDefaults(e) {
-        e.preventDefault();
-        e.stopPropagation();
-    }
-    
-    function highlight() {
-        uploadBox.classList.add('drag-over');
-    }
-    
-    function unhighlight() {
-        uploadBox.classList.remove('drag-over');
-    }
-    
-    function handleDrop(e) {
-        const dt = e.dataTransfer;
-        const files = dt.files;
-        
-        handleFiles(files);
-    }
-    
-    function handleFiles(files) {
-        if (files.length > 0) {
-            const file = files[0];
-            
-            // Verificar se é uma imagem
-            if (file.type.startsWith('image/')) {
-                displayFile(file);
-                // Aqui você pode adicionar a lógica para fazer o upload do arquivo
-                uploadFile(file);
-            } else {
-                alert('Por favor, selecione apenas arquivos de imagem.');
+
+    <script>document.addEventListener('DOMContentLoaded', function () {
+            const uploadBox = document.querySelector('.upload-box');
+            const fileInput = document.getElementById('file-input');
+
+            // Adicionar classe CSS para indicar que aceita drop
+            uploadBox.classList.add('drag-drop-area');
+
+            // Prevenir comportamento padrão do navegador
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                uploadBox.addEventListener(eventName, preventDefaults, false);
+                document.body.addEventListener(eventName, preventDefaults, false);
+            });
+
+            // Destacar área de drop quando arquivo está sendo arrastado
+            ['dragenter', 'dragover'].forEach(eventName => {
+                uploadBox.addEventListener(eventName, highlight, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                uploadBox.addEventListener(eventName, unhighlight, false);
+            });
+
+            // Gerenciar o evento de drop
+            uploadBox.addEventListener('drop', handleDrop, false);
+
+            // Permitir clique na área para abrir seletor de arquivos
+            uploadBox.addEventListener('click', function (e) {
+                const currentFileInput = uploadBox.querySelector('#file-input');
+                if (
+                    e.target === currentFileInput ||
+                    e.target.classList.contains('remove-file') ||
+                    e.target.closest('.remove-file')
+                ) {
+                    return;
+                }
+                if (currentFileInput) {
+                    currentFileInput.click();
+                }
+            });
+
+            // Gerenciar seleção de arquivo através do input
+            fileInput.addEventListener('change', function (e) {
+                handleFiles(e.target.files);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
             }
-        }
-    }
-    
-    function displayFile(file) {
-        // Criar preview da imagem
-        const reader = new FileReader();
-        
-        reader.onload = function(e) {
-            // Remover conteúdo atual da upload-box
-            const currentContent = uploadBox.innerHTML;
-            
-            // Criar elemento de preview
-            uploadBox.innerHTML = `
+
+            function highlight() {
+                uploadBox.classList.add('drag-over');
+            }
+
+            function unhighlight() {
+                uploadBox.classList.remove('drag-over');
+            }
+
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+
+                handleFiles(files);
+            }
+
+            function handleFiles(files) {
+                if (files.length > 0) {
+                    const file = files[0];
+
+                    // Verificar se é uma imagem
+                    if (file.type.startsWith('image/')) {
+                        displayFile(file);
+                        // Aqui você pode adicionar a lógica para fazer o upload do arquivo
+                        uploadFile(file);
+                    } else {
+                        alert('Por favor, selecione apenas arquivos de imagem.');
+                    }
+                }
+            }
+
+            function displayFile(file) {
+                // Criar preview da imagem
+                const reader = new FileReader();
+
+                reader.onload = function (e) {
+                    // Remover conteúdo atual da upload-box
+                    const currentContent = uploadBox.innerHTML;
+
+                    // Criar elemento de preview
+                    uploadBox.innerHTML = `
                 <div class="file-preview">
                     <img src="${e.target.result}" alt="Preview" class="preview-image">
                     <button type="button" class="remove-file" onclick="removeFile()">×</button>
                 </div>
             `;
-            
-            // Adicionar classe para estilização
-            uploadBox.classList.add('has-file');
-        };
-        
-        reader.readAsDataURL(file);
-    }
-    
-    function uploadFile(file) {
-        // Implementação da lógica de upload para o Django
-        
-        const formData = new FormData();
-        formData.append('file', file);
-        
-        // Adicionar token CSRF
-        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
-        if (csrfToken) {
-            formData.append('csrfmiddlewaretoken', csrfToken.value);
-        }
-        
-        // Mostrar indicador de upload
-        showUploadProgress();
-        
-        // Fazer upload para o Django
-        fetch('/upload/', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            hideUploadProgress();
-            
-            if (data.success) {
-                console.log('Upload realizado com sucesso:', data);
-            } else {
-                console.error('Erro no upload:', data.error);
-                showAlert(data.error);
-                removeFile(); // Remover preview se houver erro
+
+                    // Adicionar classe para estilização
+                    Box.classList.add('has-file');
+                };
+
+                reader.readAsDataURL(file);
             }
-        })
-        .catch(error => {
-            hideUploadProgress();
-            console.error('Erro no upload:', error);
-            showAlert('Erro ao enviar arquivo. Tente novamente.');
-            removeFile(); // Remover preview se houver erro
-        });
-    }
-    
-    function showUploadProgress() {
-        // Adicionar indicador de carregamento
-        const uploadBox = document.querySelector('.upload-box');
-        const progressIndicator = document.createElement('div');
-        progressIndicator.className = 'upload-progress';
-        progressIndicator.innerHTML = `
+
+            function uploadFile(file) {
+                // Implementação da lógica de upload para o Django
+
+                const formData = new FormData();
+                formData.append('file', file);
+
+                // Adicionar token CSRF
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+                if (csrfToken) {
+                    formData.append('csrfmiddlewaretoken', csrfToken.value);
+                }
+
+                // Mostrar indicador de upload
+                showUploadProgress();
+
+                // Fazer upload para o Django
+                fetch('/upload/', {
+                    method: 'POST',
+                    body: formData
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        hideUploadProgress();
+
+                        if (data.success) {
+                            console.log('Upload realizado com sucesso:', data);
+                        } else {
+                            console.error('Erro no upload:', data.error);
+                            showAlert(data.error);
+                            removeFile(); // Remover preview se houver erro
+                        }
+                    })
+                    .catch(error => {
+                        hideUploadProgress();
+                        console.error('Erro no upload:', error);
+                        showAlert('Erro ao enviar arquivo. Tente novamente.');
+                        removeFile(); // Remover preview se houver erro
+                    });
+            }
+
+            function showUploadProgress() {
+                // Adicionar indicador de carregamento
+                const uploadBox = document.querySelector('.upload-box');
+                const progressIndicator = document.createElement('div');
+                progressIndicator.className = 'upload-progress';
+                progressIndicator.innerHTML = `
             <div class="spinner"></div>
             <p>Enviando arquivo...</p>
         `;
-        uploadBox.appendChild(progressIndicator);
-    }
-    
-    function hideUploadProgress() {
-        const progressIndicator = document.querySelector('.upload-progress');
-        if (progressIndicator) {
-            progressIndicator.remove();
-        }
-    }
-    
-    function showAlert(message, type) {
-        // Remover mensagem anterior se existir
-        const existingMessage = document.querySelector('.upload-message');
-        if (existingMessage) {
-            existingMessage.remove();
-        }
-        
-        // Criar nova mensagem
-        const messageDiv = document.createElement('div');
-        messageDiv.className = `upload-message ${type}`;
-        messageDiv.textContent = message;
-        
-        // Inserir mensagem no início da page
-        document.body.insertBefore(messageDiv, document.body.firstChild);
-        
-        // Remover mensagem após 5 segundos
-        setTimeout(() => {
-            if (messageDiv.parentNode) {
-                messageDiv.remove();
+                uploadBox.appendChild(progressIndicator);
             }
-        }, 5000);
-    }
-    
-    // Função global para remover arquivo
-    window.removeFile = function() {
-        uploadBox.innerHTML = `
+
+            function hideUploadProgress() {
+                const progressIndicator = document.querySelector('.upload-progress');
+                if (progressIndicator) {
+                    progressIndicator.remove();
+                }
+            }
+
+            function showAlert(message, type) {
+                // Remover mensagem anterior se existir
+                const existingMessage = document.querySelector('.upload-message');
+                if (existingMessage) {
+                    existingMessage.remove();
+                }
+
+                // Criar nova mensagem
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `upload-message ${type}`;
+                messageDiv.textContent = message;
+
+                // Inserir mensagem no início da page
+                document.body.insertBefore(messageDiv, document.body.firstChild);
+
+                // Remover mensagem após 5 segundos
+                setTimeout(() => {
+                    if (messageDiv.parentNode) {
+                        messageDiv.remove();
+                    }
+                }, 5000);
+            }
+
+            // Função global para remover arquivo
+            window.removeFile = function () {
+                uploadBox.innerHTML = `
             <p>Envie uma foto</p>
             <input type="file" id="file-input" accept="image/*">
         `;
-        uploadBox.classList.remove('has-file');
-        
-        // Recriar event listeners para o novo input
-        const newFileInput = document.getElementById('file-input');
-        newFileInput.addEventListener('change', function(e) {
-            handleFiles(e.target.files);
-        });
-    };
-});</script>
+                uploadBox.classList.remove('has-file');
+
+                // Recriar event listeners para o novo input
+                const newFileInput = document.getElementById('file-input');
+                newFileInput.addEventListener('change', function (e) {
+                    handleFiles(e.target.files);
+                });
+            };
+        });</script>
 </body>
 {% endblock %}
