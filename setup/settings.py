@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 import os
 from pathlib import Path
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,12 +21,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-aeoyl7ay@%6&9pkad+*s@b13^0qwhwo8wws#c(@=-@(hbhogp@'
+SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# DEBUG: defina 'False' em produção (no Railway coloque DEBUG=False)
+DEBUG = os.environ.get("DEBUG", "False").lower() in ("1", "true", "yes")
 
-ALLOWED_HOSTS = ['0.0.0.0', 'localhost', '127.0.0.1','192.168.1.4', '192.168.190.129']
+ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "*").split(",")
 
 
 # Application definition
@@ -43,7 +45,8 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
+    "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -75,11 +78,9 @@ WSGI_APPLICATION = 'setup.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# DATABASE: use DATABASE_URL provida pelo Railway (ou configure manualmente)
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    "default": dj_database_url.parse(os.environ.get("DATABASE_URL", ""), conn_max_age=600)
 }
 
 
@@ -117,20 +118,30 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 STATICFILES_DIRS = [
         os.path.join(BASE_DIR, 'setup/static')
 ]
-
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-
-MEDIA_ROOT = os.path.join(str(BASE_DIR), 'media')
-
-MEDIA_URL = '/media/'
+# Armazenamento de static files otimizado
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
+
+# Supabase storage settings
+SUPABASE_URL = os.environ.get("SUPABASE_URL")
+SUPABASE_SERVICE_ROLE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+SUPABASE_BUCKET = os.environ.get("SUPABASE_BUCKET", "media")
+SUPABASE_SIGNED_URL_EXPIRES_IN = int(os.environ.get("SUPABASE_SIGNED_URL_EXPIRES_IN", 3600))
+
+# Use o backend customizado criado (coloque o path correto)
+DEFAULT_FILE_STORAGE = "postgresql://postgres:l7TYBYJUHpGd0DYp@db.edhkizptfwovlmezipww.supabase.co:5432/postgres"
+
+# Opcional: MEDIA_URL só para conveniência local; em produção os arquivos são servidos via Supabase
+MEDIA_URL = "/media/"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
