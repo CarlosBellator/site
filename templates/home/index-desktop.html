@@ -12,16 +12,46 @@
         <h1>EduVision IA</h1>
     </header>
     <main class="main-container">
+        <div class="graphs-preview-modal" id="graphs-preview-modal">
+            <div class="modal-content">
+                <div class="modal-header">Seleciona o gráfico desejado
+                    <span class="close-button" onclick="closeGraphsPreviewModal()">&times;</span>
+                </div>
+                <div class="graphs-preview">
+                    <!-- As imagens dos gráficos serão inseridas aqui -->
+                </div>
+            </div>
+        </div>
+        <div class="generate-graph-modal" id="generate-graph-modal">
+            <div class="modal-content">
+                <div class="modal-header">Gerar Gráfico
+                    <span class="close" onclick="closeGraphGenerateModal()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="graph-name">Nome do Gráfico</label>
+                        <input type="text" id="graph-name" name="graph-name" placeholder="Nome do gráfico" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="graph-description">Descrição (opcional)</label>
+                        <textarea id="graph-description" name="graph-description" placeholder="Adicione uma descrição para o gráfico..." rows="3"></textarea>
+                    </div>
+                    <div class="button-group">
+                        <button class="generate-btn" onclick="generateGraph()">Gerar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
         <aside class="history-section">
             <h2>Histórico</h2>
-            <div class="history-item">
-                <span class="download-icon"></span>
-            </div>
-            <div class="history-item">
-                <span class="download-icon"></span>
-            </div>
-            <div class="history-item">
-                <span class="download-icon"></span>
+            <div>
+                {% for graph in graph_history %}
+                <div class="history-item">
+                    <p>{{ graph.name }}</p>
+                    <span class="download-icon" onclick="downloadGraph3D({{ graph.id }})"></span>
+                    <img src="{{ graph.imagem.url }}" alt="">
+                </div>
+                {% endfor %}
             </div>
         </aside>
 
@@ -35,33 +65,36 @@
                 <div class="input-group-container">
                     <div class="input-group">
                         <label for="x-unit">Unidade Eixo X</label>
-                        <input type="text" id="x-unit" name="x-unit" value="V (m/s)">
+                        <input type="text" id="x-unit" name="x-unit" placeholder="Ex: t(s)">
                     </div>
                     <div class="input-group">
                         <label for="y-unit">Unidade Eixo Y</label>
-                        <input type="text" id="y-unit" name="y-unit" value="S (m)">
+                        <input type="text" id="y-unit" name="y-unit" placeholder="Ex: s(m)">
                     </div>
                 </div>
                 <div class="input-group-container">
                     <div class="input-group">
                         <label for="x-values">Valores Eixo X</label>
-                        <input type="text" id="x-values" name="x-values" value="3, 3, 3, 2, 1">
+                        <input type="text" id="x-values" name="x-values" placeholder="Ex: 0, 1, 2, 3, 4">
                     </div>
                     <div class="input-group">
                         <label for="y-values">Valores Eixo Y</label>
-                        <input type="text" id="y-values" name="y-values" value="0, 1, 2, 3, 4">
+                        <input type="text" id="y-values" name="y-values" placeholder="Ex: 3, 3, 3, 2, 1">
                     </div>
                 </div>
 
                 <div class="button-group">
-                    <button id="generate-btn">Gerar</button>
-                    <button id="export-btn">Exportar</button>
+                    <button class="generate-btn" onclick="openGraphGenerateModal()">Gerar</button>
+                    <button class="export-btn">Exportar</button>
                 </div>
             </div>
         </section>
     </main>
+    <script>
+        // Variável global para armazenar o caminho da imagem do gráfico
+        let currentGraphImagePath = null;
 
-    <script>document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function () {
             const uploadBox = document.querySelector('.upload-box');
             const fileInput = document.getElementById('file-input');
 
@@ -142,26 +175,39 @@
             }
 
             function displayFile(file) {
-                // Criar preview da imagem
-                const reader = new FileReader();
-
-                reader.onload = function (e) {
-                    // Remover conteúdo atual da upload-box
-                    const currentContent = uploadBox.innerHTML;
-
-                    // Criar elemento de preview
+                const uploadBox = document.querySelector('.upload-box');
+                
+                // Se for uma string (caminho de arquivo), exibir diretamente
+                if (typeof file === 'string') {
                     uploadBox.innerHTML = `
                 <div class="file-preview">
+                    <img src="${file}" alt="Preview" class="preview-image">
+                    <button type="button" class="remove-file" onclick="removeFile()">x</button>
+                </div>
+            `;
+                    uploadBox.classList.add('has-file');
+                } else {
+                    // Se for um objeto File, criar preview da imagem
+                    const reader = new FileReader();
+
+                    reader.onload = function (e) {
+                        // Remover conteúdo atual da upload-box
+                        const currentContent = uploadBox.innerHTML;
+
+                        // Criar elemento de preview
+                        uploadBox.innerHTML = `
+                <div class="file-preview">
                     <img src="${e.target.result}" alt="Preview" class="preview-image">
-                    <button type="button" class="remove-file" onclick="removeFile()">×</button>
+                    <button type="button" class="remove-file" onclick="removeFile()">x</button>
                 </div>
             `;
 
-                    // Adicionar classe para estilização
-                    Box.classList.add('has-file');
-                };
+                        // Adicionar classe para estilização
+                        uploadBox.classList.add('has-file');
+                    };
 
-                reader.readAsDataURL(file);
+                    reader.readAsDataURL(file);
+                }
             }
 
             function uploadFile(file) {
@@ -176,8 +222,8 @@
                     formData.append('csrfmiddlewaretoken', csrfToken.value);
                 }
 
-                // Mostrar indicador de upload
-                showUploadProgress();
+                // Mostrar indicador de processamento
+                showProcessingProgress();
 
                 // Fazer upload para o Django
                 fetch('/upload/', {
@@ -186,10 +232,26 @@
                 })
                     .then(response => response.json())
                     .then(data => {
-                        hideUploadProgress();
+                        hideProcessingProgress();
 
                         if (data.success) {
                             console.log('Upload realizado com sucesso:', data);
+                            if (data.variaveis) {
+                                displayFile(data.file_path);
+                                showSelectedGraph(data.file_path, data);
+                            } else if (data.status == 422) {
+                                showAlert('Não foi encontrado nenhum gráfico na imagem. Tente outro arquivo ou digite os valores do gráfico.', 'error');
+                            } else {
+                                const graphsContainer = document.querySelector('.graphs-preview-modal .modal-content .graphs-preview');
+                                    document.querySelector('.graphs-preview-modal').style.display = 'block';
+                                    graphsContainer.innerHTML = ''; // Limpar conteúdo anterior
+                                imagesHtml = '';
+                                for (let i = 0; i < data.graphs_list.length; i++) {
+                                    imagesHtml += `<img src="${data.graphs_list[i]}" alt="Preview" id="${data.file_name[i]}" onclick="processGraph('${data.graphs_list[i]}')">`;
+                                }
+                                graphsContainer.innerHTML = `${imagesHtml} `;
+                            }
+
                         } else {
                             console.error('Erro no upload:', data.error);
                             showAlert(data.error);
@@ -197,33 +259,33 @@
                         }
                     })
                     .catch(error => {
-                        hideUploadProgress();
+                        hideProcessingProgress();
                         console.error('Erro no upload:', error);
                         showAlert('Erro ao enviar arquivo. Tente novamente.');
                         removeFile(); // Remover preview se houver erro
                     });
             }
 
-            function showUploadProgress() {
+            window.showProcessingProgress = function() {
                 // Adicionar indicador de carregamento
                 const uploadBox = document.querySelector('.upload-box');
                 const progressIndicator = document.createElement('div');
                 progressIndicator.className = 'upload-progress';
                 progressIndicator.innerHTML = `
             <div class="spinner"></div>
-            <p>Enviando arquivo...</p>
+            <p>Processando...</p>
         `;
                 uploadBox.appendChild(progressIndicator);
             }
 
-            function hideUploadProgress() {
+            window.hideProcessingProgress = function() {
                 const progressIndicator = document.querySelector('.upload-progress');
                 if (progressIndicator) {
                     progressIndicator.remove();
                 }
             }
 
-            function showAlert(message, type) {
+            window.showAlert = function(message, type) {
                 // Remover mensagem anterior se existir
                 const existingMessage = document.querySelector('.upload-message');
                 if (existingMessage) {
@@ -246,6 +308,9 @@
                 }, 5000);
             }
 
+            // Tornar displayFile acessível globalmente
+            window.displayFile = displayFile;
+
             // Função global para remover arquivo
             window.removeFile = function () {
                 uploadBox.innerHTML = `
@@ -253,6 +318,9 @@
             <input type="file" id="file-input" accept="image/*">
         `;
                 uploadBox.classList.remove('has-file');
+                
+                // Limpar o caminho da imagem
+                currentGraphImagePath = null;
 
                 // Recriar event listeners para o novo input
                 const newFileInput = document.getElementById('file-input');
@@ -260,6 +328,164 @@
                     handleFiles(e.target.files);
                 });
             };
-        });</script>
+        });
+    function closeGraphsPreviewModal() {
+          document.getElementById('graphs-preview-modal').style.display = 'none'
+          document.body.style.overflow = 'auto' // Restaura scroll da página
+        }
+    function processGraph(filePath) {
+        displayFile(filePath);
+        // Fechar modal de pré-visualização
+        closeGraphsPreviewModal();
+        showProcessingProgress();
+        // Obter valores dos inputs
+        fetch('/process_graph_request/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({
+                graph_path: filePath
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                hideProcessingProgress();
+                if (data.success) {
+                    console.log('Processamento realizado com sucesso:', data);
+                    showSelectedGraph(filePath, data);
+                    // Aqui você pode adicionar a lógica para exibir os dados processados
+                } else {
+                    console.log('erro: ', data.error);  
+                    console.error('Erro no processamento:', data.error);
+                    showAlert(data.error);
+                }
+            })};
+    function showSelectedGraph(filePath, data) {
+        // Armazenar o caminho da imagem na variável global
+        currentGraphImagePath = filePath;
+
+        document.getElementById('x-unit').value = data.variaveis.x_axis_label_text;
+        document.getElementById('y-unit').value = data.variaveis.y_axis_label_text;
+        document.getElementById('x-values').value = data.variaveis.x_data;
+        document.getElementById('y-values').value = data.variaveis.y_data;
+    }
+    function generateGraph() {
+        // Validar campos obrigatórios
+        const graphName = document.getElementById('graph-name').value.trim();
+        const graphDescription = document.getElementById('graph-description').value.trim(); // Opcional
+        const xUnit = document.getElementById('x-unit').value.trim();
+        const yUnit = document.getElementById('y-unit').value.trim();
+        const xValues = document.getElementById('x-values').value.trim();
+        const yValues = document.getElementById('y-values').value.trim();
+
+        // Validação do nome do gráfico
+        if (!graphName) {
+            showAlert('Por favor, preencha o nome do gráfico.', 'error');
+            document.getElementById('graph-name').focus();
+            return;
+        }
+
+        // Validação dos outros campos
+        if (!xUnit || !yUnit) {
+            showAlert('Por favor, preencha as unidades dos eixos X e Y.', 'error');
+            closeGraphGenerateModal();
+            return;
+        }
+
+        if (!xValues || !yValues) {
+            showAlert('Por favor, preencha os valores dos eixos X e Y.', 'error');
+            closeGraphGenerateModal();
+            return;
+        }
+
+        // Converter valores para arrays
+        const xValuesArray = xValues.split(',').map(v => v.trim()).filter(v => v);
+        const yValuesArray = yValues.split(',').map(v => v.trim()).filter(v => v);
+
+        if (xValuesArray.length === 0 || yValuesArray.length === 0) {
+            showAlert('Os valores devem ser separados por vírgula.', 'error');
+            closeGraphGenerateModal();
+            return;
+        }
+
+        if (xValuesArray.length !== yValuesArray.length) {
+            showAlert('A quantidade de valores X e Y deve ser igual.', 'error');
+            closeGraphGenerateModal();
+            return;
+        }
+
+        // Fechar modal e mostrar progresso
+        closeGraphGenerateModal();
+        showProcessingProgress();
+
+        // Enviar dados para o servidor
+        fetch('/generate_graph/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({
+                graph_name: graphName,
+                graph_description: graphDescription,
+                x_unit: xUnit,
+                y_unit: yUnit,
+                x_values: xValuesArray,
+                y_values: yValuesArray,
+                graph_image_path: currentGraphImagePath
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            hideProcessingProgress();
+            
+            if (data.success) {
+                showAlert('Gráfico gerado com sucesso!', 'success');
+                console.log('Gráfico criado:', data);
+                // Limpar campos
+                document.getElementById('graph-name').value = '';
+                document.getElementById('graph-description').value = '';
+                document.getElementById('x-unit').value = '';
+                document.getElementById('y-unit').value = '';
+                document.getElementById('x-values').value = '';
+                document.getElementById('y-values').value = '';
+                // Limpar o caminho da imagem
+                currentGraphImagePath = null;
+                // Recarregar a página para atualizar o histórico
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);
+            } else {
+                showAlert('Erro ao gerar gráfico: ' + data.error, 'error');
+            }
+        })
+        .catch(error => {
+            hideProcessingProgress();
+            showAlert('Erro ao gerar gráfico: ' + error.message, 'error');
+            console.error('Erro:', error);
+        });
+    }
+    function openGraphGenerateModal() {
+        document.getElementById('generate-graph-modal').style.display = 'block'
+        document.body.style.overflow = 'hidden' // Previne scroll da página
+    }
+    function closeGraphGenerateModal() {
+        document.getElementById('generate-graph-modal').style.display = 'none'
+        document.body.style.overflow = 'auto' // Restaura scroll da página
+    }
+    
+    function downloadGraph3D(graphId) {
+        // Criar um link temporário para iniciar o download
+        const downloadUrl = `/download_graph_3d/${graphId}/`;
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+    </script>
 </body>
 {% endblock %}

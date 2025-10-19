@@ -21,7 +21,7 @@ def graficoobj(valores_grafico,graph_name,output_folder):
     # Nomes dos eixos (para referência e para os rótulos em Braille)
 
     x_axis_label_text = valores_grafico.get("x_axis_label_text")
-    y_axis_label_text = valores_grafico.get("x_axis_label_text")
+    y_axis_label_text = valores_grafico.get("y_axis_label_text")
 
     # Parâmetros de design (ajuste conforme necessário)
     altura_base_plataforma = 0.14       # Altura (espessura) da base principal
@@ -353,7 +353,7 @@ def graficoobj(valores_grafico,graph_name,output_folder):
         nome_arquivo_saida = f'{output_folder}/{graph_name}_tatil.stl'
         modelo_final_combinado.export(nome_arquivo_saida)
         print(f"Arquivo STL '{nome_arquivo_saida}' gerado com sucesso!")
-        return modelo_final_combinado  # Retorna o objeto 3D completo
+        return nome_arquivo_saida  # Retorna o caminho do arquivo 3D gerado
     else:
         print("Nenhuma malha foi gerada para o modelo final. Verifique as configurações e dados.")
         return None  # Retorna None se falhou

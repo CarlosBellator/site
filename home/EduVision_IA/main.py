@@ -23,16 +23,16 @@ if not api_key:
     )
 
 genai.configure(api_key=api_key)
-MODEL_ID = "gemini-2.0-flash"
+MODEL_ID = "models/gemini-flash-latest"
 model = genai.GenerativeModel(MODEL_ID)
 
 # Configura pasta de saída de resultados dos gráficos encontrados na imagem
-output_folder = './home/results/'
+output_folder = './media/temp/results/'
 # Verifica se a pasta de saída existe, caso contrário, cria
 if not os.path.exists(output_folder):
     os.makedirs(output_folder)
  # Confiura a pasta de saída de resultados dos gráficos 3D
-graph3d_output_folder = './home/Gráficos-3D'
+graph3d_output_folder = './media/Gráficos-3D'
 # Verifica se a pasta de saída existe, caso contrário, cria
 if not os.path.exists(graph3d_output_folder):
     os.makedirs(graph3d_output_folder)
@@ -95,6 +95,7 @@ def cut_image(image, nome_arquivo):
     results = model(image)
     result = results[0] # Define como result, os retornos com a tag 0, ou seja a tag de gráfico, enquanto a tag 1 são os enunciados
     graph_counter = 0 
+    graph_list = [] # Lista para armazenar os gráficos encontrados
     # Faz o recorte dos gráficos
     for i, box in enumerate(result.boxes):
         x1, y1, x2, y2 = map(int, box.xyxy[0])
@@ -109,7 +110,9 @@ def cut_image(image, nome_arquivo):
             # Salvar recorte
             cv2.imwrite(output_path, cropped)
             graph_counter += 1
+            graph_list.append(output_path)
     print(f"* {graph_counter} gráficos foram encontrados e salvos em {output_folder}")
+    return graph_list
 
 def deletar_grafico():
     start()
@@ -188,11 +191,21 @@ def analise_grafico(grafico_path):
     '''
     img = Image.open(grafico_path)
 
-    prompt = """Analise o gráfico e me retorne apenas suas medidas conforme o modelo:
-        "x_data = [0, 1, 2, 3, 4, 5]
-        y_data = [3, 3, 3, 2, 1, 0]
-        x_axis_label_text = "v (m/s)"
-        y_axis_label_text = "t (s)" " se houver alguma incógnita, estime o valor dela"""
+    prompt = """Analise o gráfico e me retorne apenas suas medidas no formato de código Python.
+    
+    IMPORTANTE: Sua resposta deve estar OBRIGATORIAMENTE dentro de um bloco de código Markdown usando três acentos graves (```).
+    
+    Formato de resposta:
+    ```
+    x_data = [0, 1, 2, 3, 4, 5]
+    y_data = [3, 3, 3, 2, 1, 0]
+    x_axis_label_text = "v (m/s)"
+    y_axis_label_text = "t (s)"
+    ```
+    
+    Se houver alguma incógnita, estime o valor dela.
+    Certifique-se de incluir os três acentos graves (```) no início e no final do código."""
+    
     response = model.generate_content(
         contents=[prompt,img]
     )
@@ -203,28 +216,41 @@ def recortarVariaveis(data_string):
     Essa função é responsável por recortar os valores do gráfico retornados pelo gemini
     Inputs: - data_string (str): A string contendo o bloco de código a ser extraído.
     Outputs: - dict: Um dicionário contendo as variáveis extraídas do bloco de código.
-             - Retorna um dicionário vazio se o bloco de código não for encontrado.
+             - Retorna None se houver erro na extração.
     """
     # --- Extração do Bloco de Código ---
-
+    
     # Encontra a posição inicial do bloco de código.
     start_index = data_string.find("```")
     if start_index == -1: # Verifica se o marcador inicial foi encontrado
         print("Erro: Marcador inicial de código '```' não encontrado na string.")
-        return
+        print(f"Resposta recebida: {data_string[:200]}...")  # Mostra os primeiros 200 caracteres
+        return None
+    
     # Adicionamos 3 para pular os caracteres "```" e começar no código real.
     start_index += 3
+    
+    # Verifica se há um identificador de linguagem (como "python") logo após ```
+    # e pula essa linha se existir
+    newline_after_backticks = data_string.find('\n', start_index)
+    if newline_after_backticks != -1:
+        first_line = data_string[start_index:newline_after_backticks].strip().lower()
+        if first_line in ['python', 'py', '']:
+            start_index = newline_after_backticks + 1
 
     # Encontra a posição final do bloco de código.
     # Usamos rfind para garantir que pegamos o último "```".
     end_index = data_string.rfind("```")
     if end_index == -1 or end_index <= start_index: # Verifica se o marcador final foi encontrado e é válido
         print("Erro: Marcador final de código '```' não encontrado ou inválido na string.")
-        return 
+        print(f"Resposta recebida: {data_string[:200]}...")  # Mostra os primeiros 200 caracteres
+        return None
 
     # Extrai a substring que contém apenas o código Python.
     # O método .strip() remove quaisquer espaços em branco extras ou quebras de linha no início e no final do bloco extraído.
     code_block = data_string[start_index:end_index].strip()
+    
+    print(f"Bloco de código extraído: {code_block}")  # Debug
 
     # --- Execução do Código e Captura das Variáveis ---
 
@@ -239,7 +265,8 @@ def recortarVariaveis(data_string):
         exec(code_block, {}, extracted_vars)
     except Exception as e:
         print(f"Erro ao executar o bloco de código: {e}")
-        return {}
+        print(f"Bloco que causou erro: {code_block}")
+        return None
 
     # Retorna o dicionário contendo todas as variáveis que foram definidas
     # no bloco de código.

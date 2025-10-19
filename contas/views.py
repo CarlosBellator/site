@@ -14,6 +14,7 @@ from contas.models import userProfile
 
 import json
 # Create your views here.
+@csrf_exempt
 def login(request):
     form = LoginForm()
     if request.method == 'POST':
