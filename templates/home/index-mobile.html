@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block content %}
+{% csrf_token %}
 <body class="body-mobile">
     <header class="header-mobile">
         <a href="{% url 'conta' %}">
@@ -8,6 +9,60 @@
         </a>
         <h1>EduVision IA</h1>
     </header>
+    <div class="processing-progress">
+    </div>
+    <!-- Modal de selção de gráfico-->
+    <div class="graphs-preview-modal" id="graphs-preview-modal">
+        <div class="modal-content">
+            <div class="modal-header">Seleciona o gráfico desejado
+                <span class="close-button" onclick="closeGraphsPreviewModal()">&times;</span>
+            </div>
+            <div class="graphs-preview">
+                <!-- As imagens dos gráficos serão inseridas aqui -->
+            </div>
+        </div>
+    </div>
+    <!-- Modal de exibição de gráfico-->
+    <div class="graph-display-modal-mobile" id="graph-display-modal">
+        <div class="modal-content-mobile">
+            <div class="modal-header">Gráfico Selecionado
+                <span class="close-button" onclick="closeGraphDisplayModal()">&times;</span>
+            </div>
+            <div class="graph-display">
+                <!-- O gráfico será exibido aqui -->
+            </div>
+            <div class="data-input-section">
+                <div class="input-group-container">
+                    <div class="input-group">
+                        <label for="x-unit">Unidade Eixo X</label>
+                        <input type="text" id="x-unit" name="x-unit" placeholder="Ex: t(s)">
+                    </div>
+                    <div class="input-group">
+                        <label for="y-unit">Unidade Eixo Y</label>
+                        <input type="text" id="y-unit" name="y-unit" placeholder="Ex: s(m)">
+                    </div>
+                </div>
+                <div class="input-group-container">
+                    <div class="input-group">
+                        <label for="x-values">Valores Eixo X</label>
+                        <input type="text" id="x-values" name="x-values" placeholder="Ex: 0, 1, 2, 3, 4">
+                    </div>
+                    <div class="input-group">
+                        <label for="y-values">Valores Eixo Y</label>
+                        <input type="text" id="y-values" name="y-values" placeholder="Ex: 3, 3, 3, 2, 1">
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button class="generate-btn" onclick="openGraphGenerateModal(false)">Gerar</button>
+                    <button class="export-btn" onclick="openGraphGenerateModal(true)">Exportar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Input oculto para captura de foto -->
+    <input type="file" id="camera-input" accept="image/*" capture="environment" style="display: none;">
+    <!-- Modal de histórico-->
     <section class="history-modal" id="history-modal">
             <div class="modal-content-mobile">
                 <div class="modal-header-mobile">
@@ -27,7 +82,7 @@
         </div>
     </section>
     <main class="main-container-mobile">
-        <aside class="tirar-foto-mobile">
+        <aside class="tirar-foto-mobile" onclick="abrirCamera()">
             <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path
                     d="M59.9381 75.9999C68.7746 75.9999 75.9381 68.8365 75.9381 59.9999C75.9381 51.1634 68.7746 43.9999 59.9381 43.9999C51.1015 43.9999 43.9381 51.1634 43.9381 59.9999C43.9381 68.8365 51.1015 75.9999 59.9381 75.9999Z"
@@ -55,6 +110,123 @@
         </section>
     </main>
     <script>
+    function uploadFile(file) {
+            // Implementação da lógica de upload para o Django
+            console.log('Iniciando upload do arquivo:', file);
+            const formData = new FormData();
+            formData.append('file', file);
+
+            // Adicionar token CSRF
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+            if (csrfToken) {
+                formData.append('csrfmiddlewaretoken', csrfToken.value);
+            }
+
+            // Mostrar indicador de processamento
+            showProcessingProgress();
+
+            // Fazer upload para o Django
+            fetch('/upload/', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    hideProcessingProgress();
+
+                    if (data.success) {
+                        console.log('Upload realizado com sucesso:', data);
+                        if (data.variaveis) {
+                            showSelectedGraph(data.file_path, data);
+                        } else if (data.status == 422) {
+                            showAlert('Não foi encontrado nenhum gráfico na imagem. Tente outro arquivo ou digite os valores do gráfico.', 'error');
+                        } else {
+                            const graphsContainer = document.querySelector('.graphs-preview-modal .modal-content .graphs-preview');
+                                document.querySelector('.graphs-preview-modal').style.display = 'block';
+                                graphsContainer.innerHTML = ''; // Limpar conteúdo anterior
+                            imagesHtml = '';
+                            for (let i = 0; i < data.graphs_list.length; i++) {
+                                imagesHtml += `<img src="${data.graphs_list[i]}" alt="Preview" id="${data.file_name[i]}" onclick="processGraph('${data.graphs_list[i]}')">`;
+                            }
+                            graphsContainer.innerHTML = `${imagesHtml} `;
+                        }
+
+                    } else {
+                        console.error('Erro no upload:', data.error);
+                        showAlert(data.error);
+                    }
+                })
+                .catch(error => {
+                    hideProcessingProgress();
+                    console.error('Erro no upload:', error);
+                    showAlert('Erro ao enviar arquivo. Tente novamente.'); 
+                });
+        }
+        
+        window.showProcessingProgress = function() {
+            // Adicionar indicador de carregamento
+            const processingBox = document.querySelector('.processing-progress');
+            processingBox.style.display = 'block';
+            const progressIndicator = document.createElement('div');
+            progressIndicator.className = 'upload-progress';
+            progressIndicator.innerHTML = `
+            <div class="spinner"></div>
+            <p>Processando...</p>
+        `;
+            processingBox.appendChild(progressIndicator);
+        }
+
+        window.hideProcessingProgress = function() {
+            const progressIndicator = document.querySelector('.upload-progress');
+            if (progressIndicator) {
+                progressIndicator.remove();
+            }
+        }
+
+    window.showAlert = function(message, type) {
+        // Remover mensagem anterior se existir
+        const existingMessage = document.querySelector('.upload-message');
+        if (existingMessage) {
+            existingMessage.remove();
+        }
+
+        // Criar nova mensagem
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `upload-message ${type}`;
+        messageDiv.textContent = message;
+
+        // Inserir mensagem no início da page
+        document.body.insertBefore(messageDiv, document.body.firstChild);
+
+        // Remover mensagem após 5 segundos
+        setTimeout(() => {
+            if (messageDiv.parentNode) {
+                messageDiv.remove();
+            }
+        }, 5000);
+    }
+    function showSelectedGraph(filePath, data) {
+    // Armazenar o caminho da imagem na variável global
+    currentGraphImagePath = filePath;
+    document.getElementById('graph-display-modal').style.display = 'flex';
+    const graphDisplay = document.querySelector('.graph-display-modal-mobile .graph-display');
+    graphDisplay.innerHTML = `<img src="${filePath}" alt="Gráfico Selecionado">`;
+
+    document.getElementById('x-unit').value = data.variaveis.x_axis_label_text;
+    document.getElementById('y-unit').value = data.variaveis.y_axis_label_text;
+    document.getElementById('x-values').value = data.variaveis.x_data;
+    document.getElementById('y-values').value = data.variaveis.y_data;
+}
+function closeGraphDisplayModal(){
+    document.getElementById('graph-display-modal').style.display = 'none'
+    document.body.style.overflow = 'auto' // Restaura scroll da página
+    
+    // Limpar os valores dos inputs
+    document.getElementById('x-unit').value = '';
+    document.getElementById('y-unit').value = '';
+    document.getElementById('x-values').value = '';
+    document.getElementById('y-values').value = '';
+}
     function openHistoryModal(){
         document.getElementById('history-modal').style.display = 'block'
         document.body.style.overflow = 'hidden' // Previne scroll da página
@@ -73,5 +245,36 @@
         link.click();
         document.body.removeChild(link);
     }
+
+    // Função para abrir a câmera nativa do celular
+    function abrirCamera() {
+        const cameraInput = document.getElementById('camera-input');
+        
+        // Abrir o seletor de arquivos/câmera nativo
+        cameraInput.click();
+    }
+
+    // Event listener para quando uma foto for capturada
+    document.addEventListener('DOMContentLoaded', function() {
+        const cameraInput = document.getElementById('camera-input');
+        
+        cameraInput.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            
+            if (file) {
+                // Verificar se é uma imagem
+                if (!file.type.startsWith('image/')) {
+                    showAlert('Por favor, selecione uma imagem válida.', 'error');
+                    return;
+                }
+                
+                // Enviar a foto usando a função uploadFile
+                uploadFile(file);
+                
+                // Limpar o input para permitir selecionar a mesma foto novamente
+                event.target.value = '';
+            }
+        });
+    });
     </script>
 {% endblock %}
