@@ -37,7 +37,7 @@
                         <textarea id="graph-description" name="graph-description" placeholder="Adicione uma descrição para o gráfico..." rows="3"></textarea>
                     </div>
                     <div class="button-group">
-                        <button class="generate-btn" onclick="generateGraph()">Gerar</button>
+                        <button class="generate-btn" id="generate-btn" onclick="generateGraph(false)">Gerar</button>
                     </div>
                 </div>
             </div>
@@ -84,8 +84,8 @@
                 </div>
 
                 <div class="button-group">
-                    <button class="generate-btn" onclick="openGraphGenerateModal()">Gerar</button>
-                    <button class="export-btn">Exportar</button>
+                    <button class="generate-btn" onclick="openGraphGenerateModal(false)">Gerar</button>
+                    <button class="export-btn" onclick="openGraphGenerateModal(true)">Exportar</button>
                 </div>
             </div>
         </section>
@@ -371,7 +371,7 @@
         document.getElementById('x-values').value = data.variaveis.x_data;
         document.getElementById('y-values').value = data.variaveis.y_data;
     }
-    function generateGraph() {
+    function generateGraph(toExport) {
         // Validar campos obrigatórios
         const graphName = document.getElementById('graph-name').value.trim();
         const graphDescription = document.getElementById('graph-description').value.trim(); // Opcional
@@ -454,9 +454,12 @@
                 // Limpar o caminho da imagem
                 currentGraphImagePath = null;
                 // Recarregar a página para atualizar o histórico
-                setTimeout(() => {
-                    location.reload();
-                }, 1500);
+                if (toExport) {
+                    downloadGraph3D(data.graph_id);
+                }
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1500);
             } else {
                 showAlert('Erro ao gerar gráfico: ' + data.error, 'error');
             }
@@ -467,16 +470,20 @@
             console.error('Erro:', error);
         });
     }
-    function openGraphGenerateModal() {
+    function openGraphGenerateModal(toExport) {
         document.getElementById('generate-graph-modal').style.display = 'block'
         document.body.style.overflow = 'hidden' // Previne scroll da página
+        if (toExport) {
+            document.getElementById('generate-btn').onclick = function() { generateGraph(true); };
+        } else {
+            document.getElementById('generate-btn').onclick = function() { generateGraph(false); };
+        }   
     }
     function closeGraphGenerateModal() {
         document.getElementById('generate-graph-modal').style.display = 'none'
         document.body.style.overflow = 'auto' // Restaura scroll da página
     }
-    
-    function downloadGraph3D(graphId) {
+       function downloadGraph3D(graphId) {
         // Criar um link temporário para iniciar o download
         const downloadUrl = `/download_graph_3d/${graphId}/`;
         const link = document.createElement('a');
