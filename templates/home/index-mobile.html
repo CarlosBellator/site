@@ -8,6 +8,24 @@
         </a>
         <h1>EduVision IA</h1>
     </header>
+    <section class="history-modal" id="history-modal">
+            <div class="modal-content-mobile">
+                <div class="modal-header-mobile">
+                    <span class="close-mobile" onclick="closeHistoryModal()">&times;</span>
+                <h2>Histórico de Gráficos</h2>
+             </div>
+                <div class="history-items-mobile">
+                <!-- Os itens do histórico serão inseridos aqui dinamicamente -->
+                 {% for graph in graph_history %}
+                    <div class="history-item">
+                    <p>{{ graph.name }}</p>
+                        <span class="download-icon-mobile" onclick="downloadGraph3D({{ graph.id }})"></span>
+                    <img src="{{ graph.imagem.url }}" alt="">
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
     <main class="main-container-mobile">
         <aside class="tirar-foto-mobile">
             <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -27,7 +45,7 @@
                         fill="#B2DAFA" />
                 </svg>
             </div>
-            <div class="historico-graficos-mobile">
+            <div class="historico-graficos-mobile" onclick="openHistoryModal()">
                 <svg width="61" height="61" viewBox="0 0 61 61" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path
                         d="M0 0V30.5H30.5V0H0ZM38.125 15.25V38.125H15.25V45.75H45.75V15.25H38.125ZM53.375 30.5V53.375H30.5V61H61V30.5H53.375Z"
@@ -36,4 +54,24 @@
             </div>
         </section>
     </main>
+    <script>
+    function openHistoryModal(){
+        document.getElementById('history-modal').style.display = 'block'
+        document.body.style.overflow = 'hidden' // Previne scroll da página
+    }
+    function closeHistoryModal(){
+        document.getElementById('history-modal').style.display = 'none'
+        document.body.style.overflow = 'auto' // Restaura scroll da página
+    }
+    function downloadGraph3D(graphId) {
+        // Criar um link temporário para iniciar o download
+        const downloadUrl = `/download_graph_3d/${graphId}/`;
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+    </script>
 {% endblock %}
