@@ -377,7 +377,7 @@
 .generate-graph-modal {
     display: none;
     position: fixed;
-    z-index: 1000;
+    z-index: 990;
     left: 0;
     top: 0;
     width: 100%;
@@ -610,7 +610,7 @@ a {
 .modal {
     display: none;
     position: fixed;
-    z-index: 1000;
+    z-index: 990;
     left: 0;
     top: 0;
     width: 100%;
@@ -776,7 +776,7 @@ a {
 .graphs-preview-modal {
     display: none;
     position: fixed;
-    z-index: 1000;
+    z-index: 990;
     left: 0;
     top: -7%;
     width: 100%;
@@ -927,7 +927,7 @@ a {
     border-radius: 10px;
     font-family: "Inter", sans-serif;
     font-weight: 500;
-    z-index: 1000;
+    z-index: 99999;
     max-width: 400px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     animation: slideInRight 0.3s ease;
@@ -973,7 +973,7 @@ a {
     -webkit-text-stroke-width: 1.5px;
     -webkit-text-stroke-color: #B2DAFA;
     text-shadow:
-        3px 3px 5px rgba(0, 0, 0, 0.5);
+    3px 3px 5px rgba(0, 0, 0, 0.5);
 }
 
 .profile-icon-mobile {
@@ -1151,7 +1151,7 @@ a {
 .history-modal {
     display: none;
     position: fixed;
-    z-index: 1000;
+    z-index: 990;
     left: 0;
     top: 0;
     width: 100%;
@@ -1291,8 +1291,6 @@ a {
     padding: 0;
     border-radius: 20px;
     width: 90%;
-    max-width: 900px;
-    max-height: 80vh;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
     animation: slideIn 0.3s ease-out;
     color: #333;
@@ -1307,7 +1305,7 @@ a {
 .graph-display-modal-mobile {
     display: none;
     position: fixed;
-    z-index: 1000;
+    z-index: 990;
     left: 0;
     top: 0;
     width: 100%;
@@ -1319,6 +1317,27 @@ a {
     width: 100%;
     justify-content: center;
     align-items: center;
+}
+.graphs-preview-modal-mobile {
+    display: none;
+    position: fixed;
+    z-index: 990;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 110%;
+    background-color: rgba(0, 0, 0, 0.5);
+    animation: fadeIn 0.3s ease-out;
+}
+.generate-graph-modal.nomenclature-graph{
+    z-index: 9999 !important;
+}
+.generate-graph-modal.nomenclature-graph .modal-content{
+    position: relative;
+    z-index: 9999;
+}
+.graph-display-modal-mobile.modal-behind {
+    z-index: 989 !important;
 }
 .graph-display-modal-mobile img {
     width: 90%;

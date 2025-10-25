@@ -12,9 +12,11 @@
     <div class="processing-progress">
     </div>
     <!-- Modal de selção de gráfico-->
-    <div class="graphs-preview-modal" id="graphs-preview-modal">
+    <div class="graphs-preview-modal-mobile" id="graphs-preview-modal-mobile">
         <div class="modal-content">
-            <div class="modal-header">Seleciona o gráfico desejado
+            <div class="modal-header"><h2>
+                Seleciona o gráfico desejado
+            </h2>
                 <span class="close-button" onclick="closeGraphsPreviewModal()">&times;</span>
             </div>
             <div class="graphs-preview">
@@ -22,10 +24,53 @@
             </div>
         </div>
     </div>
+    <!-- Modal de geração de gráfico-->
+    <div class="generate-graph-modal" id="generate-graph-modal">
+        <div class="modal-content">
+            <div class="modal-header">Gerar Gráfico
+                <span class="close" onclick="closeGraphGenerateModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="graph-name">Nome do Gráfico</label>
+                    <input type="text" id="graph-name" name="graph-name" placeholder="Nome do gráfico" required>
+                </div>
+                <div class="form-group">
+                    <label for="graph-description">Descrição (opcional)</label>
+                    <textarea id="graph-description" name="graph-description" placeholder="Adicione uma descrição para o gráfico..." rows="3"></textarea>
+                </div>
+                <div class="button-group">
+                    <button class="generate-btn" id="generate-btn" onclick="generateGraph(false)">Gerar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Modal de Nomenclatura de gráfico-->
+    <div class="generate-graph-modal nomenclature-graph" id="generate-graph-modal">
+        <div class="modal-content">
+            <div class="modal-header">Gerar Gráfico
+                <span class="close" onclick="closeGraphGenerateModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="graph-name">Nome do Gráfico</label>
+                    <input type="text" id="graph-name" name="graph-name" placeholder="Nome do gráfico" required>
+                </div>
+                <div class="form-group">
+                    <label for="graph-description">Descrição (opcional)</label>
+                    <textarea id="graph-description" name="graph-description" placeholder="Adicione uma descrição para o gráfico..." rows="3"></textarea>
+                </div>
+                <div class="button-group">
+                    <button class="generate-btn" id="generate-btn" onclick="generateGraph(false)">Gerar</button>
+                </div>
+            </div>
+        </div>
+    </div>
     <!-- Modal de exibição de gráfico-->
     <div class="graph-display-modal-mobile" id="graph-display-modal">
         <div class="modal-content-mobile">
-            <div class="modal-header">Gráfico Selecionado
+            <div class="modal-header">
+                <h2>Gráfico Selecionado</h2>
                 <span class="close-button" onclick="closeGraphDisplayModal()">&times;</span>
             </div>
             <div class="graph-display">
@@ -62,6 +107,8 @@
     </div>
     <!-- Input oculto para captura de foto -->
     <input type="file" id="camera-input" accept="image/*" capture="environment" style="display: none;">
+    <!-- Input oculto para explorar arquivos/galeria -->
+    <input type="file" id="file-input" accept="image/*" style="display: none;">
     <!-- Modal de histórico-->
     <section class="history-modal" id="history-modal">
             <div class="modal-content-mobile">
@@ -93,7 +140,7 @@
             </svg>
         </aside>
         <section class="content-section-mobile">
-            <div class="enviar-foto-mobile">
+            <div class="enviar-foto-mobile" onclick="abrirExploradorArquivos()">
                 <svg width="62" height="61" viewBox="0 0 62 61" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path
                         d="M0.904999 0V61H61.905V0H0.904999ZM8.53 7.625H54.28V30.5L46.655 22.875L39.03 30.5L54.28 45.75V53.375H46.655L16.155 22.875L8.53 30.5V7.625Z"
@@ -141,9 +188,9 @@
                         } else if (data.status == 422) {
                             showAlert('Não foi encontrado nenhum gráfico na imagem. Tente outro arquivo ou digite os valores do gráfico.', 'error');
                         } else {
-                            const graphsContainer = document.querySelector('.graphs-preview-modal .modal-content .graphs-preview');
-                                document.querySelector('.graphs-preview-modal').style.display = 'block';
-                                graphsContainer.innerHTML = ''; // Limpar conteúdo anterior
+                            const graphsContainer = document.querySelector('.graphs-preview-modal-mobile .modal-content .graphs-preview');
+                            document.querySelector('.graphs-preview-modal-mobile').style.display = 'block';
+                            graphsContainer.innerHTML = ''; // Limpar conteúdo anterior
                             imagesHtml = '';
                             for (let i = 0; i < data.graphs_list.length; i++) {
                                 imagesHtml += `<img src="${data.graphs_list[i]}" alt="Preview" id="${data.file_name[i]}" onclick="processGraph('${data.graphs_list[i]}')">`;
@@ -254,27 +301,210 @@ function closeGraphDisplayModal(){
         cameraInput.click();
     }
 
+    // Função para abrir o explorador de arquivos/galeria
+    function abrirExploradorArquivos() {
+        const fileInput = document.getElementById('file-input');
+        // Abrir o seletor de arquivos/galeria nativo
+        fileInput.click();
+    }
+
     // Event listener para quando uma foto for capturada
     document.addEventListener('DOMContentLoaded', function() {
         const cameraInput = document.getElementById('camera-input');
         
         cameraInput.addEventListener('change', function(event) {
             const file = event.target.files[0];
-            
             if (file) {
                 // Verificar se é uma imagem
                 if (!file.type.startsWith('image/')) {
                     showAlert('Por favor, selecione uma imagem válida.', 'error');
                     return;
                 }
-                
                 // Enviar a foto usando a função uploadFile
                 uploadFile(file);
-                
                 // Limpar o input para permitir selecionar a mesma foto novamente
                 event.target.value = '';
             }
         });
+
+        // Listener para seleção via explorador de arquivos/galeria
+        const galleryInput = document.getElementById('file-input');
+        if (galleryInput) {
+            galleryInput.addEventListener('change', function(event) {
+                const file = event.target.files[0];
+
+                if (file) {
+                    // Verificar se é uma imagem
+                    if (!file.type.startsWith('image/')) {
+                        showAlert('Por favor, selecione uma imagem válida.', 'error');
+                        return;
+                    }
+
+                    // Enviar a foto usando a função uploadFile
+                    uploadFile(file);
+
+                    // Limpar o input para permitir selecionar a mesma foto novamente
+                    event.target.value = '';
+                }
+            });
+        }
     });
+    function closeGraphsPreviewModal() {
+          document.getElementById('graphs-preview-modal-mobile').style.display = 'none'
+          document.body.style.overflow = 'auto' // Restaura scroll da página
+        }
+    function openGraphGenerateModal(toExport) {
+        const graphDisplayModal = document.getElementById('graph-display-modal');
+        if (graphDisplayModal) {
+            //Atualiza o z-index para ficar atrás do modal de geração
+            graphDisplayModal.style.zIndex = '989';
+        }
+        document.getElementById('generate-graph-modal').style.display = 'block'
+        document.body.style.overflow = 'hidden' // Previne scroll da página
+        if (toExport) {
+            document.getElementById('generate-btn').onclick = function() { generateGraph(true); };
+        } else {
+            document.getElementById('generate-btn').onclick = function() { generateGraph(false); };
+        }   
+    }
+    function closeGraphGenerateModal() {
+        const graphDisplayModal = document.getElementById('graph-display-modal');
+        if (graphDisplayModal) {
+            //Restaura o z-index original
+            graphDisplayModal.style.zIndex = '990';
+        }
+        document.getElementById('generate-graph-modal').style.display = 'none';
+        document.body.style.overflow = 'auto' // Restaura scroll da página
+    }
+    
+        function generateGraph(toExport) {
+        // Validar campos obrigatórios
+        const graphName = document.getElementById('graph-name').value.trim();
+        const graphDescription = document.getElementById('graph-description').value.trim(); // Opcional
+        const xUnit = document.getElementById('x-unit').value.trim();
+        const yUnit = document.getElementById('y-unit').value.trim();
+        const xValues = document.getElementById('x-values').value.trim();
+        const yValues = document.getElementById('y-values').value.trim();
+
+        // Validação do nome do gráfico
+        if (!graphName) {
+            showAlert('Por favor, preencha o nome do gráfico.', 'error');
+            document.getElementById('graph-name').focus();
+            return;
+        }
+
+        // Validação dos outros campos
+        if (!xUnit || !yUnit) {
+            showAlert('Por favor, preencha as unidades dos eixos X e Y.', 'error');
+            closeGraphGenerateModal();
+            return;
+        }
+
+        if (!xValues || !yValues) {
+            showAlert('Por favor, preencha os valores dos eixos X e Y.', 'error');
+            closeGraphGenerateModal();
+            return;
+        }
+
+        // Converter valores para arrays
+        const xValuesArray = xValues.split(',').map(v => v.trim()).filter(v => v);
+        const yValuesArray = yValues.split(',').map(v => v.trim()).filter(v => v);
+
+        if (xValuesArray.length === 0 || yValuesArray.length === 0) {
+            showAlert('Os valores devem ser separados por vírgula.', 'error');
+            closeGraphGenerateModal();
+            return;
+        }
+
+        if (xValuesArray.length !== yValuesArray.length) {
+            showAlert('A quantidade de valores X e Y deve ser igual.', 'error');
+            closeGraphGenerateModal();
+            return;
+        }
+
+        // Fechar modal e mostrar progresso
+        closeGraphGenerateModal();
+        closeGraphDisplayModal();
+        showProcessingProgress();
+
+        // Enviar dados para o servidor
+        fetch('/generate_graph/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({
+                graph_name: graphName,
+                graph_description: graphDescription,
+                x_unit: xUnit,
+                y_unit: yUnit,
+                x_values: xValuesArray,
+                y_values: yValuesArray,
+                graph_image_path: currentGraphImagePath
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            hideProcessingProgress();
+            
+            if (data.success) {
+                showAlert('Gráfico gerado com sucesso!', 'success');
+                console.log('Gráfico criado:', data);
+                // Limpar campos
+                document.getElementById('graph-name').value = '';
+                document.getElementById('graph-description').value = '';
+                document.getElementById('x-unit').value = '';
+                document.getElementById('y-unit').value = '';
+                document.getElementById('x-values').value = '';
+                document.getElementById('y-values').value = '';
+                // Limpar o caminho da imagem
+                currentGraphImagePath = null;
+                // Recarregar a página para atualizar o histórico
+                if (toExport) {
+                    downloadGraph3D(data.graph_id);
+                }
+                    setTimeout(() => {
+                        location.reload();
+                    }, 2000);
+            } else {
+                showAlert('Erro ao gerar gráfico: ' + data.error, 'error');
+            }
+        })
+        .catch(error => {
+            hideProcessingProgress();
+            showAlert('Erro ao gerar gráfico: ' + error.message, 'error');
+            console.error('Erro:', error);
+        });
+    }
+
+    function processGraph(filePath) {
+        // Fechar modal de pré-visualização
+        closeGraphsPreviewModal();
+        showProcessingProgress();
+        // Obter valores dos inputs
+        fetch('/process_graph_request/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({
+                graph_path: filePath
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                hideProcessingProgress();
+                if (data.success) {
+                    console.log('Processamento realizado com sucesso:', data);
+                    showSelectedGraph(filePath, data);
+                    // Aqui você pode adicionar a lógica para exibir os dados processados
+                } else {
+                    console.log('erro: ', data.error);  
+                    console.error('Erro no processamento:', data.error);
+                    showAlert(data.error);
+                }
+            })};
     </script>
 {% endblock %}
